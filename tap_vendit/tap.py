@@ -114,29 +114,24 @@ class TapVendit(Tap):
         try:
             # First get the product IDs
             find_stream = streams.ProductsFindStream(self)
-            find_records = list(find_stream.get_records(context=None))
+            product_ids = []
             
-            if not find_records:
+            # Collect all product IDs from the find stream
+            for record in find_stream.get_records(context=None):
+                if isinstance(record, dict) and "id" in record:
+                    product_ids.append(record["id"])
+            
+            if not product_ids:
                 self.logger.warning("No product IDs found from ProductsFindStream")
                 return
                 
-            # Get the product IDs from the first (and only) record
-            product_ids = find_records[0]["product_ids"]
             self.logger.info(f"Found {len(product_ids)} product IDs to process")
             
-            if not product_ids:
-                self.logger.warning("Empty list of product IDs, nothing to process")
-                return
-            
-            # Then get the full product details
+            # Then get the full product details using the stream's sync method
             get_multiple_stream = streams.ProductsGetMultipleStream(self)
-            records_processed = 0
+            get_multiple_stream.sync(context={"product_ids": product_ids})
             
-            for record in get_multiple_stream.get_records(context={"product_ids": product_ids}):
-                self._write_record(get_multiple_stream.stream_name, record)
-                records_processed += 1
-                
-            self.logger.info(f"Successfully processed {records_processed} product records")
+            self.logger.info(f"Successfully processed product records")
             
         except Exception as e:
             self.logger.error(f"Error during sync: {str(e)}")

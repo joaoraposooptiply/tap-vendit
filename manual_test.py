@@ -8,112 +8,6 @@ from typing import List, Dict, Any
 from tap_vendit.tap import TapVendit
 from tap_vendit.streams import ProductsFindStream, ProductsGetMultipleStream
 
-# Load config and secrets
-config_path = os.path.abspath('config.json')
-print(f"Reading config from: {config_path}")
-with open(config_path, 'r') as f:
-    config = json.load(f)
-print(f"Initial api_url: {config['api_url']}")  # Debug print
-print(f"Loaded config: {config}")  # Debug print
-with open('secrets.json', 'r') as f:
-    secrets = json.load(f)
-config.update(secrets)
-
-# Token handling
-token = secrets.get('token')
-token_expire = secrets.get('token_expire', 0)
-
-# If token is missing or expired, fetch a new one
-if not token or time.time() >= token_expire:
-    token_url = "https://oauth.staging.vendit.online/Api/GetToken"
-    print(f"Requesting token from: {token_url}")
-    print(f"Token request data: apiKey={config['api_key']}, username={config['username']}, password=***")
-    token_resp = requests.post(token_url, data={
-        "apiKey": config["api_key"],
-        "username": config["username"],
-        "password": config["password"]
-    }, verify=False)
-    print(f"Token response status: {token_resp.status_code}")
-    print(f"Token response body: {token_resp.text}")
-    token_resp.raise_for_status()
-    token_data = token_resp.json()
-    token = token_data["token"]
-    token_expire = token_data["expire"]
-    # Save token to secrets.json
-    secrets['token'] = token
-    secrets['token_expire'] = token_expire
-    with open('secrets.json', 'w') as f:
-        json.dump(secrets, f, indent=4)
-    print(f"Token saved to secrets.json")
-
-# Make the Products/Find request
-find_url = f"{config['api_url'].rstrip('/')}/VenditPublicApi/Products/Find"
-print(f"Using API URL: {config['api_url']}")  # Debug print
-print(f"Full config before request: {config}")  # Debug print
-headers = {
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-    "Token": token,
-    "ApiKey": config["api_key"]
-}
-body = {
-    "fieldFilters": [
-        {
-            "field": 524,
-            "value": config["start_date"],
-            "value2": config["end_date"],
-            "filterComparison": 12
-        }
-    ],
-    "paginationOffset": 0,
-    "operator": 0
-}
-print(f"\nPOST {find_url}")
-print(f"Headers: {headers}")
-print(f"Body: {json.dumps(body)}")
-resp = requests.post(find_url, headers=headers, json=body, verify=False)
-print("Status:", resp.status_code)
-print("Response:", resp.text)
-
-# Call GetMultiple with the results array
-if resp.status_code == 200:
-    results = resp.json().get("results", [])
-    if results:
-        get_multiple_url = f"{config['api_url'].rstrip('/')}/VenditPublicApi/Products/GetMultiple"
-        get_multiple_body = {"primaryKeys": results}
-        print(f"\nPOST {get_multiple_url}")
-        print(f"Headers: {headers}")
-        print(f"Body: {json.dumps(get_multiple_body)}")
-        get_multiple_resp = requests.post(get_multiple_url, headers=headers, json=get_multiple_body, verify=False)
-        print("Status:", get_multiple_resp.status_code)
-        print("Response:", get_multiple_resp.text)
-        
-        # Save response to CSV
-        if get_multiple_resp.status_code == 200:
-            response_data = get_multiple_resp.json()
-            items = response_data.get('items', [])
-            
-            if items:
-                # Define CSV fields
-                fields = [
-                    'productId', 'productNumber', 'productType', 'productDescription', 
-                    'productSubdescription', 'productSize', 'productColor', 'salesUnitQuantity',
-                    'lastModified', 'creationDatetime'
-                ]
-                
-                # Create CSV file
-                csv_filename = 'products_response.csv'
-                with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
-                    writer = csv.DictWriter(csvfile, fieldnames=fields)
-                    writer.writeheader()
-                    for item in items:
-                        # Only include the fields we want
-                        row = {field: item.get(field, '') for field in fields}
-                        writer.writerow(row)
-                
-                print(f"\nResponse saved to {csv_filename}")
-                print(f"Total products saved: {len(items)}")
-
 class VenditAPI:
     def __init__(self, config: Dict[str, Any]):
         self.base_url = config['api_url']
@@ -163,27 +57,33 @@ class VenditAPI:
         self._ensure_valid_token()
         all_ids = []
         offset = 0
-        page_size = 500  # Maximum page size for Find endpoint
+        page_size = 100  # API always returns 100 results per page
+        total_pages = 0
         
+        print(f"\nStarting pagination with page size {page_size}")
         while True:
+            print(f"\nFetching page {total_pages + 1} (offset: {offset})...")
+            request_body = {
+                "fieldFilters": [
+                    {
+                        "field": 524,
+                        "value": start_date,
+                        "value2": end_date,
+                        "filterComparison": 12
+                    }
+                ],
+                "paginationOffset": offset,
+                "operator": 0
+            }
+            print(f"Request body: {json.dumps(request_body, indent=2)}")
+            
             response = self.session.post(
                 f"{self.base_url}/VenditPublicApi/Products/Find",
-                json={
-                    "fieldFilters": [
-                        {
-                            "field": 524,
-                            "value": start_date,
-                            "value2": end_date,
-                            "filterComparison": 12
-                        }
-                    ],
-                    "paginationOffset": offset,
-                    "operator": 0
-                }
+                json=request_body
             )
             
             if response.status_code == 401:
-                # Token might have expired, try refreshing
+                print("Token expired, refreshing...")
                 self._get_token()
                 continue
                 
@@ -193,18 +93,30 @@ class VenditAPI:
                 break
                 
             data = response.json()
+            print(f"Response data: {json.dumps(data, indent=2)}")
+            
             if not data or not data.get("results"):  # No more results
+                print("No more results found")
                 break
                 
             # Extract IDs from the response
             ids = data["results"]
             all_ids.extend(ids)
+            total_pages += 1
+            print(f"Retrieved {len(ids)} IDs in current page")
+            print(f"Total IDs so far: {len(all_ids)}")
             
+            # Check if we've received fewer results than the page size
             if len(ids) < page_size:  # Last page
+                print("Received fewer results than page size, this is the last page")
                 break
                 
+            # Increment offset for next page
             offset += page_size
             
+        print(f"\nPagination complete:")
+        print(f"Total pages processed: {total_pages}")
+        print(f"Total IDs found: {len(all_ids)}")
         return all_ids
 
     def get_products_in_chunks(self, product_ids: List[str]) -> List[Dict[str, Any]]:
@@ -234,9 +146,11 @@ class VenditAPI:
             # The API returns a dict with an 'items' key
             if isinstance(products, dict) and 'items' in products:
                 all_products.extend(products['items'])
+                print(f"Retrieved {len(products['items'])} products in current chunk, total so far: {len(all_products)}")
             else:
                 print('Warning: Unexpected response format from GetMultiple:', products)
             
+        print(f"Retrieved total of {len(all_products)} product details")
         return all_products
 
     def get_all_products(self, start_date: str, end_date: str) -> List[Dict[str, Any]]:
@@ -244,50 +158,94 @@ class VenditAPI:
         # First get all IDs
         print(f"Fetching all product IDs from {start_date} to {end_date}...")
         all_ids = self.get_all_product_ids(start_date, end_date)
-        print(f"Found {len(all_ids)} products")
         
+        if not all_ids:
+            print("No product IDs found")
+            return []
+            
         # Then get all products in chunks
         print("Fetching product details...")
-        all_products = self.get_products_in_chunks(all_ids)
-        print(f"Retrieved {len(all_products)} product details")
-        
-        return all_products
+        return self.get_products_in_chunks(all_ids)
+
+# Load config and secrets
+config_path = os.path.abspath('config.json')
+print(f"Reading config from: {config_path}")
+with open(config_path, 'r') as f:
+    config = json.load(f)
+print(f"Initial api_url: {config['api_url']}")
+print(f"Loaded config: {config}")
+
+# Initialize the API client
+api = VenditAPI(config)
+
+# Get all products
+print("Fetching all products...")
+products = api.get_all_products(config['start_date'], config['end_date'])
+print(f"Retrieved {len(products)} products")
+
+if products:
+    # Collect all unique fieldnames from all products
+    all_fieldnames = set()
+    for prod in products:
+        all_fieldnames.update(prod.keys())
+    all_fieldnames = list(all_fieldnames)
+    
+    # Save to CSV (append if file exists, write header only if new)
+    csv_filename = 'products_response.csv'
+    file_exists = os.path.isfile(csv_filename)
+    with open(csv_filename, 'a', newline='', encoding='utf-8') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=all_fieldnames)
+        if not file_exists:
+            writer.writeheader()
+        for product in products:
+            writer.writerow(product)
+    
+    print(f"\nAppended {len(products)} products to {csv_filename}")
+    
+    # Save to JSON (overwrite as before)
+    json_filename = 'products_response.json'
+    with open(json_filename, 'w', encoding='utf-8') as jsonfile:
+        json.dump(products, jsonfile, indent=2)
+    
+    print(f"Saved {len(products)} products to {json_filename}")
 
 def main():
     # Load config and secrets
     config_path = os.path.abspath('config.json')
-    print(f"Reading config from: {config_path}")
     with open(config_path, 'r') as f:
         config = json.load(f)
-    print(f"Initial api_url: {config['api_url']}")
-    print(f"Loaded config: {config}")
     
-    # Initialize API client
+    # Initialize the API client
     api = VenditAPI(config)
     
     # Get all products
     products = api.get_all_products(config['start_date'], config['end_date'])
     
-    # Save to CSV
     if products:
-        csv_file = 'products_response.csv'
         # Collect all unique fieldnames from all products
         all_fieldnames = set()
         for prod in products:
             all_fieldnames.update(prod.keys())
         all_fieldnames = list(all_fieldnames)
-        with open(csv_file, 'w', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=all_fieldnames)
-            writer.writeheader()
-            writer.writerows(products)
-        print(f"Saved {len(products)} products to {csv_file}")
-    
-    # Save to JSON
-    if products:
-        json_file = 'products_response.json'
-        with open(json_file, 'w') as f:
-            json.dump(products, f, indent=2)
-        print(f"Saved {len(products)} products to {json_file}")
+        
+        # Save to CSV (append if file exists, write header only if new)
+        csv_filename = 'products_response.csv'
+        file_exists = os.path.isfile(csv_filename)
+        with open(csv_filename, 'a', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=all_fieldnames)
+            if not file_exists:
+                writer.writeheader()
+            for product in products:
+                writer.writerow(product)
+        
+        print(f"\nAppended {len(products)} products to {csv_filename}")
+        
+        # Save to JSON (overwrite as before)
+        json_filename = 'products_response.json'
+        with open(json_filename, 'w', encoding='utf-8') as jsonfile:
+            json.dump(products, jsonfile, indent=2)
+        
+        print(f"Saved {len(products)} products to {json_filename}")
 
 if __name__ == "__main__":
     main()

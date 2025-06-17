@@ -109,6 +109,7 @@ class VenditStream(RESTStream):
         super().__init__(*args, **kwargs)
         self.session = requests.Session()
         self.requests_session.verify = False  # Disable SSL verification for all requests
+        self._authenticator = VenditAuthenticator(self.config)  # cache the authenticator
 
     @property
     def url_base(self) -> str:
@@ -117,8 +118,7 @@ class VenditStream(RESTStream):
 
     @property
     def authenticator(self) -> VenditAuthenticator:
-        """Return a new authenticator object."""
-        return VenditAuthenticator(self.config)
+        return self._authenticator
 
     @property
     def http_headers(self) -> dict:
