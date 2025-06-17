@@ -54,6 +54,11 @@ class TapVendit(Tap):
             description="The earliest record date to sync",
         ),
         th.Property(
+            "end_date",
+            th.DateTimeType(),
+            description="The latest record date to sync",
+        ),
+        th.Property(
             "user_agent",
             th.StringType(),
             description=(
@@ -97,14 +102,45 @@ class TapVendit(Tap):
             A list of discovered streams.
         """
         return [
+            streams.ProductsFindStream(self),
+            streams.ProductsGetMultipleStream(self),
             streams.ProductsStream(self),
-            streams.ProductGroupsStream(self),
-            streams.SuppliersStream(self),
-            streams.ProductSuppliersStream(self),
-            streams.OrdersStream(self),
             streams.PurchaseOrdersStream(self),
             streams.ProductsGetMultipleStream(self),
         ]
+
+    def sync_all(self) -> None:
+        """Sync all streams."""
+        try:
+            # First get the product IDs
+            find_stream = streams.ProductsFindStream(self)
+            find_records = list(find_stream.get_records(context=None))
+            
+            if not find_records:
+                self.logger.warning("No product IDs found from ProductsFindStream")
+                return
+                
+            # Get the product IDs from the first (and only) record
+            product_ids = find_records[0]["product_ids"]
+            self.logger.info(f"Found {len(product_ids)} product IDs to process")
+            
+            if not product_ids:
+                self.logger.warning("Empty list of product IDs, nothing to process")
+                return
+            
+            # Then get the full product details
+            get_multiple_stream = streams.ProductsGetMultipleStream(self)
+            records_processed = 0
+            
+            for record in get_multiple_stream.get_records(context={"product_ids": product_ids}):
+                self._write_record(get_multiple_stream.stream_name, record)
+                records_processed += 1
+                
+            self.logger.info(f"Successfully processed {records_processed} product records")
+            
+        except Exception as e:
+            self.logger.error(f"Error during sync: {str(e)}")
+            raise
 
 
 if __name__ == "__main__":

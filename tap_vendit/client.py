@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import decimal
+import logging
 import typing as t
 from datetime import datetime, timedelta
 from importlib import resources
+import time
 
 import requests
+from requests.exceptions import RequestException
 from singer_sdk.authenticators import APIAuthenticatorBase
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.pagination import BaseAPIPaginator
@@ -16,6 +19,8 @@ from singer_sdk.streams import RESTStream
 if t.TYPE_CHECKING:
     from singer_sdk.helpers.types import Context
 
+# Set up logging
+logger = logging.getLogger(__name__)
 
 # TODO: Delete this is if not using json files for schema definition
 SCHEMAS_DIR = resources.files(__package__) / "schemas"
@@ -31,9 +36,10 @@ class VenditAuthenticator(APIAuthenticatorBase):
         self._password = config["password"]
         self._token_url = "https://oauth.staging.vendit.online/Api/GetToken"
         self._token = None
-        self._token_expiry = None
         self.requests_session = requests.Session()
         self.requests_session.verify = False  # Disable SSL verification
+        self._max_retries = 3
+        self._retry_delay = 1  # seconds
 
     @property
     def auth_headers(self) -> dict:
@@ -42,30 +48,51 @@ class VenditAuthenticator(APIAuthenticatorBase):
         Returns:
             A dictionary of auth headers.
         """
-        if not self._token or not self._token_expiry or datetime.utcnow() >= self._token_expiry:
+        if not self._token:
             self._get_token()
         
         return {
             "Token": self._token,
             "ApiKey": self._api_key,
+            "Content-Type": "application/json"
         }
 
     def _get_token(self) -> None:
-        """Get a new token."""
+        """Get a new token with retry logic."""
         params = {
             "apiKey": self._api_key,
             "username": self._username,
             "password": self._password,
         }
         
-        response = self.requests_session.post(self._token_url, data=params)
-        response.raise_for_status()
+        headers = {
+            "Content-Type": "application/json",
+            "ApiKey": self._api_key
+        }
         
-        token_data = response.json()
-        print("Token response:", token_data)  # Log the response content
-        self._token = token_data["token"]
-        # Set token expiry to 1 hour from now (typical token lifetime)
-        self._token_expiry = datetime.utcnow() + timedelta(hours=1)
+        for attempt in range(self._max_retries):
+            try:
+                response = self.requests_session.post(
+                    self._token_url,
+                    params=params,
+                    headers=headers
+                )
+                response.raise_for_status()
+                
+                token_data = response.json()
+                if not isinstance(token_data, dict) or "token" not in token_data:
+                    raise ValueError("Invalid token response format")
+                
+                self._token = token_data["token"]
+                logger.info("Successfully obtained new token")
+                return
+                
+            except (RequestException, ValueError) as e:
+                if attempt == self._max_retries - 1:
+                    logger.error(f"Failed to get token after {self._max_retries} attempts: {str(e)}")
+                    raise
+                logger.warning(f"Token request failed (attempt {attempt + 1}/{self._max_retries}): {str(e)}")
+                time.sleep(self._retry_delay * (attempt + 1))  # Exponential backoff
 
     @property
     def auth_params(self):
@@ -77,6 +104,11 @@ class VenditStream(RESTStream):
 
     records_jsonpath = "$.data[*]"
     next_page_token_jsonpath = "$.pagination.next_page"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.session = requests.Session()
+        self.requests_session.verify = False  # Disable SSL verification for all requests
 
     @property
     def url_base(self) -> str:

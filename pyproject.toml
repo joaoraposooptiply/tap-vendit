@@ -12,7 +12,7 @@ singer-sdk = "^0.34.0"
 requests = "^2.31.0"
 
 [tool.poetry.scripts]
-tap-vendit = "tap_vendit:main"
+tap-vendit = "tap_vendit.tap:TapVendit.cli"
 
 [build-system]
 requires = ["poetry-core"]
