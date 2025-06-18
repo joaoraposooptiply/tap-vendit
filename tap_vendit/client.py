@@ -10,11 +10,11 @@ from importlib import resources
 import time
 
 import requests
-from requests.exceptions import RequestException
-from singer_sdk.authenticators import APIAuthenticatorBase
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.pagination import BaseAPIPaginator
 from singer_sdk.streams import RESTStream
+
+from tap_vendit.auth import VenditAuthenticator
 
 if t.TYPE_CHECKING:
     from singer_sdk.helpers.types import Context
@@ -26,79 +26,6 @@ logger = logging.getLogger(__name__)
 SCHEMAS_DIR = resources.files(__package__) / "schemas"
 
 
-class VenditAuthenticator(APIAuthenticatorBase):
-    """Vendit authenticator."""
-
-    def __init__(self, config: dict) -> None:
-        """Initialize the authenticator."""
-        self._api_key = config["api_key"]
-        self._username = config["username"]
-        self._password = config["password"]
-        self._token_url = "https://oauth.staging.vendit.online/Api/GetToken"
-        self._token = None
-        self.requests_session = requests.Session()
-        self.requests_session.verify = False  # Disable SSL verification
-        self._max_retries = 3
-        self._retry_delay = 1  # seconds
-
-    @property
-    def auth_headers(self) -> dict:
-        """Return the auth headers.
-
-        Returns:
-            A dictionary of auth headers.
-        """
-        if not self._token:
-            self._get_token()
-        
-        return {
-            "Token": self._token,
-            "ApiKey": self._api_key,
-            "Content-Type": "application/json"
-        }
-
-    def _get_token(self) -> None:
-        """Get a new token with retry logic."""
-        params = {
-            "apiKey": self._api_key,
-            "username": self._username,
-            "password": self._password,
-        }
-        
-        headers = {
-            "Content-Type": "application/json",
-            "ApiKey": self._api_key
-        }
-        
-        for attempt in range(self._max_retries):
-            try:
-                response = self.requests_session.post(
-                    self._token_url,
-                    params=params,
-                    headers=headers
-                )
-                response.raise_for_status()
-                
-                token_data = response.json()
-                if not isinstance(token_data, dict) or "token" not in token_data:
-                    raise ValueError("Invalid token response format")
-                
-                self._token = token_data["token"]
-                logger.info("Successfully obtained new token")
-                return
-                
-            except (RequestException, ValueError) as e:
-                if attempt == self._max_retries - 1:
-                    logger.error(f"Failed to get token after {self._max_retries} attempts: {str(e)}")
-                    raise
-                logger.warning(f"Token request failed (attempt {attempt + 1}/{self._max_retries}): {str(e)}")
-                time.sleep(self._retry_delay * (attempt + 1))  # Exponential backoff
-
-    @property
-    def auth_params(self):
-        return {}
-
-
 class VenditStream(RESTStream):
     """Vendit stream class."""
 
@@ -108,8 +35,11 @@ class VenditStream(RESTStream):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.session = requests.Session()
-        self.requests_session.verify = False  # Disable SSL verification for all requests
-        self._authenticator = VenditAuthenticator(self.config)  # cache the authenticator
+        self.session.verify = False  # Disable SSL verification for all requests
+        self._authenticator = VenditAuthenticator(
+            stream=self,
+            config_file=self.config.get("config_file")
+        )
 
     @property
     def url_base(self) -> str:
@@ -118,6 +48,7 @@ class VenditStream(RESTStream):
 
     @property
     def authenticator(self) -> VenditAuthenticator:
+        """Return the authenticator."""
         return self._authenticator
 
     @property

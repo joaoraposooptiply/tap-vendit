@@ -20,7 +20,8 @@ pipx install tap-vendit
   "username": "your_username",
   "password": "your_password",
   "api_url": "https://api.staging.vendit.online",
-  "start_date": "2024-01-01T00:00:00Z"
+  "start_date": "2024-01-01T00:00:00Z",
+  "config_file": "/path/to/config.json"  // Optional: for token persistence
 }
 ```
 
@@ -29,6 +30,25 @@ The `api_key`, `username`, and `password` are your Vendit API credentials. These
 The `api_url` is the base URL for the Vendit API. The default is set to the staging environment.
 
 The `start_date` is used by the tap to fetch records from that date on. This should be an [RFC3339](https://www.ietf.org/rfc/rfc3339.txt) formatted date-time, like "2024-01-01T00:00:00Z". For more details, see the [Singer best practices for dates](https://github.com/singer-io/getting-started/blob/master/BEST_PRACTICES.md#dates).
+
+The optional `config_file` parameter specifies where to store and load the authentication token. If not provided, it defaults to the `config.json` file in the tap's root directory.
+
+## Authentication
+
+The tap uses token-based authentication with the Vendit API. The authentication process:
+
+1. Uses the provided API key, username, and password to obtain an access token
+2. Caches the token and its expiration time in the config file (if specified)
+3. Automatically refreshes the token before it expires
+4. Implements retry logic with exponential backoff for token requests
+5. Handles various error conditions gracefully
+
+The token management is fully automated - you don't need to manually handle token refresh or expiration. The tap will:
+
+- Check token validity before each request
+- Refresh expired tokens automatically
+- Persist tokens to the config file (if specified) for reuse across runs
+- Handle token-related errors with retries and proper error reporting
 
 ## Configuration
 
@@ -39,13 +59,6 @@ A full list of supported settings and capabilities for this tap is available by 
 ```bash
 tap-vendit --about
 ```
-
-### Source Authentication and Authorization
-
-The tap uses token-based authentication with the Vendit API. The authentication process:
-1. Uses the provided API key, username, and password to obtain an access token
-2. Uses this token for subsequent API requests
-3. Automatically refreshes the token when it expires
 
 ## Usage
 

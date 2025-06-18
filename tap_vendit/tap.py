@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from singer_sdk import Tap
 from singer_sdk import typing as th  # JSON schema typing helpers
@@ -45,8 +45,8 @@ class TapVendit(Tap):
         th.Property(
             "api_url",
             th.StringType(),
-            default="https://api.vendit.com/v1",
-            description="The base URL for the Vendit API",
+            default="https://api.staging.vendit.online",
+            description="The url for the Vendit API service",
         ),
         th.Property(
             "start_date",
@@ -57,6 +57,22 @@ class TapVendit(Tap):
             "end_date",
             th.DateTimeType(),
             description="The latest record date to sync",
+        ),
+        th.Property(
+            "token",
+            th.StringType(),
+            secret=True,
+            description="The cached access token (will be automatically managed)",
+        ),
+        th.Property(
+            "token_expire",
+            th.IntegerType(),
+            description="The token expiration timestamp (will be automatically managed)",
+        ),
+        th.Property(
+            "config_file",
+            th.StringType(),
+            description="Path to config file for token persistence",
         ),
         th.Property(
             "user_agent",
@@ -94,8 +110,22 @@ class TapVendit(Tap):
             validate_config=validate_config,
             **kwargs,
         )
+        
+        # Make a mutable copy of the config
+        self._config = dict(self.config)
+        
+        # Set config file path if not provided
+        if not self._config.get("config_file"):
+            config_dir = os.path.dirname(os.path.abspath(__file__))
+            default_config = os.path.join(config_dir, "..", "config.json")
+            self._config["config_file"] = os.path.abspath(default_config)
 
-    def discover_streams(self) -> list[streams.VenditStream]:
+    @property
+    def config(self) -> dict:
+        """Return the mutable config dictionary."""
+        return self._config
+
+    def discover_streams(self) -> List[streams.VenditStream]:
         """Return a list of discovered streams.
 
         Returns:
@@ -104,9 +134,10 @@ class TapVendit(Tap):
         return [
             streams.ProductsFindStream(self),
             streams.ProductsGetMultipleStream(self),
-            streams.ProductsStream(self),
-            streams.PurchaseOrdersStream(self),
-            streams.ProductsGetMultipleStream(self),
+            streams.SuppliersFindStream(self),
+            streams.SuppliersGetMultipleStream(self),
+            streams.OrdersFindStream(self),
+            streams.OrdersGetMultipleStream(self),
         ]
 
     def sync_all(self) -> None:

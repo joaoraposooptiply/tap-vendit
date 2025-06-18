@@ -1,4 +1,4 @@
-"""Manual test script for the Vendit API client."""
+"""Test script for the Vendit Orders API."""
 
 import json
 import requests
@@ -8,10 +8,10 @@ import csv
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 from tap_vendit.tap import TapVendit
-from tap_vendit.streams import ProductsFindStream, ProductsGetMultipleStream
+from tap_vendit.streams import OrdersFindStream, OrdersGetMultipleStream
 from tap_vendit.auth import VenditAuthenticator, TokenRefreshError, EmptyResponseError
 
-class TestVenditAPI:
+class TestVenditOrdersAPI:
     def __init__(self, config_path: str = "config.json"):
         """Initialize the test API client.
         
@@ -30,7 +30,7 @@ class TestVenditAPI:
             
         # Create a mock stream to use with authenticator
         self.tap = TapVendit(config=self.config)
-        self.stream = ProductsFindStream(tap=self.tap)
+        self.stream = OrdersFindStream(tap=self.tap)
         
         # Initialize authenticator
         self.auth = VenditAuthenticator(
@@ -42,7 +42,7 @@ class TestVenditAPI:
         self.session = requests.Session()
         self.session.verify = False
         
-        print("\nInitialized TestVenditAPI with config:")
+        print("\nInitialized TestVenditOrdersAPI with config:")
         print(f"API URL: {self.config['api_url']}")
         print(f"Using config file: {config_path}")
         print(f"Date range: {self.config['start_date']} to {self.config['end_date']}")
@@ -75,8 +75,8 @@ class TestVenditAPI:
             
         return response
 
-    def get_all_product_ids(self, start_date: str, end_date: str) -> List[str]:
-        """Get all product IDs using pagination."""
+    def get_all_order_ids(self, start_date: str, end_date: str) -> List[str]:
+        """Get all order IDs using pagination."""
         all_ids = []
         offset = 0
         page_size = 100  # API always returns 100 results per page
@@ -101,12 +101,12 @@ class TestVenditAPI:
             
             response = self._ensure_authenticated_request(
                 'POST',
-                f"{self.config['api_url']}/VenditPublicApi/Products/Find",
+                f"{self.config['api_url']}/VenditPublicApi/Orders/Find",
                 json=request_body
             )
             
             if response.status_code != 200:
-                print(f"Error fetching products: {response.status_code}")
+                print(f"Error fetching orders: {response.status_code}")
                 print(response.text)
                 break
                 
@@ -137,82 +137,82 @@ class TestVenditAPI:
         print(f"Total IDs found: {len(all_ids)}")
         return all_ids
 
-    def get_products_in_chunks(self, product_ids: List[str]) -> List[Dict[str, Any]]:
-        """Get products in chunks of 100 IDs."""
-        all_products = []
+    def get_orders_in_chunks(self, order_ids: List[str]) -> List[Dict[str, Any]]:
+        """Get orders in chunks of 100 IDs."""
+        all_orders = []
         chunk_size = 100  # Maximum IDs per GetMultiple request
         
-        for i in range(0, len(product_ids), chunk_size):
-            chunk = product_ids[i:i + chunk_size]
+        for i in range(0, len(order_ids), chunk_size):
+            chunk = order_ids[i:i + chunk_size]
             response = self._ensure_authenticated_request(
                 'POST',
-                f"{self.config['api_url']}/VenditPublicApi/Products/GetMultiple",
+                f"{self.config['api_url']}/VenditPublicApi/Orders/GetMultiple",
                 json={"primaryKeys": chunk}
             )
             
             if response.status_code != 200:
-                print(f"Error fetching products chunk: {response.status_code}")
+                print(f"Error fetching orders chunk: {response.status_code}")
                 print(response.text)
                 continue
                 
-            products = response.json()
+            orders = response.json()
             # The API returns a dict with an 'items' key
-            if isinstance(products, dict) and 'items' in products:
-                all_products.extend(products['items'])
-                print(f"Retrieved {len(products['items'])} products in current chunk, total so far: {len(all_products)}")
+            if isinstance(orders, dict) and 'items' in orders:
+                all_orders.extend(orders['items'])
+                print(f"Retrieved {len(orders['items'])} orders in current chunk, total so far: {len(all_orders)}")
             else:
-                print('Warning: Unexpected response format from GetMultiple:', products)
+                print('Warning: Unexpected response format from GetMultiple:', orders)
             
-        print(f"Retrieved total of {len(all_products)} product details")
-        return all_products
+        print(f"Retrieved total of {len(all_orders)} order details")
+        return all_orders
 
 def main():
     """Run the manual test."""
     # Initialize API client
-    api = TestVenditAPI()
+    api = TestVenditOrdersAPI()
     
     # Use date range from config
     start_date = api.config.get("start_date")
     end_date = api.config.get("end_date")
     
     if not start_date or not end_date:
-        print("Error: start_date and end_date must be specified in config.json")
+        print("Error: start_date and end_date are required in config.json")
         return
     
     try:
-        # Get all product IDs
-        print("\nFetching product IDs...")
-        product_ids = api.get_all_product_ids(start_date, end_date)
+        # Get all order IDs
+        print("\nFetching order IDs...")
+        order_ids = api.get_all_order_ids(start_date, end_date)
         
-        if not product_ids:
-            print("No products found in date range")
+        if not order_ids:
+            print("No orders found in date range")
             return
             
-        # Get product details
-        print("\nFetching product details...")
-        products = api.get_products_in_chunks(product_ids)
+        # Get order details
+        print("\nFetching order details...")
+        orders = api.get_orders_in_chunks(order_ids)
         
         # Save results
         print("\nSaving results...")
         
         # Save as JSON
-        with open('products_response.json', 'w') as f:
-            json.dump(products, f, indent=2)
-        print(f"Saved {len(products)} products to products_response.json")
+        with open('orders_response.json', 'w') as f:
+            json.dump(orders, f, indent=2)
+        print(f"Saved {len(orders)} orders to orders_response.json")
         
         # Save as CSV with dynamic fields
-        if products:
-            # Get all unique fields from all products
+        if orders:
+            # Get all unique fields from all orders
             fieldnames = set()
-            for product in products:
-                fieldnames.update(product.keys())
+            for order in orders:
+                fieldnames.update(order.keys())
             fieldnames = sorted(list(fieldnames))
             
-            with open('products_response.csv', 'w', newline='') as f:
+            with open('orders_response.csv', 'w', newline='') as f:
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writeheader()
-                writer.writerows(products)
-            print(f"Saved {len(products)} products to products_response.csv")
+                writer.writerows(orders)
+            print(f"Saved {len(orders)} orders to orders_response.csv")
             
     except Exception as e:
         print(f"Error during test: {str(e)}")
