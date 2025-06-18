@@ -28,7 +28,7 @@ class ProductsGetMultipleStream(VenditStream):
     primary_keys = ["productId"]
     replication_key = None
     records_jsonpath = "$.items[*]"
-    BATCH_SIZE = 100  # Process IDs in batches of 100
+    BATCH_SIZE = 100
 
     schema = th.PropertiesList(
         th.Property("productId", th.IntegerType),
@@ -45,30 +45,238 @@ class ProductsGetMultipleStream(VenditStream):
         th.Property("salesVisibilityId", th.IntegerType),
         th.Property("availabilityStatusId", th.IntegerType),
         th.Property("creationDatetime", th.DateTimeType),
+        th.Property("tradeIn", th.BooleanType),
         th.Property("productLabelLayoutId", th.IntegerType),
         th.Property("cabProfileCode", th.IntegerType),
         th.Property("allowInvoiceDiscount", th.BooleanType),
         th.Property("lastModified", th.DateTimeType),
+        th.Property("isModified", th.BooleanType),
         th.Property("productGuid", th.StringType),
         th.Property("memoCommon", th.StringType),
         th.Property("memoEcommerce", th.StringType),
+        th.Property("isDeleted", th.BooleanType),
         th.Property("productSize", th.StringType),
+        th.Property("modelSeason", th.StringType),
         th.Property("productColor", th.StringType),
         th.Property("useGroupInvoiceDiscount", th.BooleanType),
+        th.Property("salesUnitId", th.IntegerType),
         th.Property("salesUnitQuantity", th.NumberType),
         th.Property("hintInfo", th.StringType),
+        th.Property("productLabelSplitLayoutId", th.IntegerType),
+        th.Property("productLabelShelfLayoutId", th.IntegerType),
+        th.Property("ecommerceGroupId", th.IntegerType),
         th.Property("productSearchCode", th.StringType),
+        th.Property("productLabelPricetagLayoutId", th.IntegerType),
+        th.Property("productImageUrl", th.StringType),
+        th.Property("disallowDiscount", th.BooleanType),
+        th.Property("productLabelActionPriceLayoutId", th.IntegerType),
+        th.Property("productLabelShelfActionPriceLayoutId", th.IntegerType),
+        th.Property("productLabelPricetagActionPriceLayoutId", th.IntegerType),
+        th.Property("isReadonly", th.BooleanType),
         th.Property("isBaseProduct", th.BooleanType),
+        th.Property("isFashioncheque", th.BooleanType),
+        th.Property("fashionchequeValue", th.NumberType),
         th.Property("deliveryFromWarehouse", th.IntegerType),
+        th.Property("productLabelSaleLayoutId", th.IntegerType),
+        th.Property("isTcsGiftcard", th.BooleanType),
+        th.Property("tcsGiftcardValue", th.NumberType),
         th.Property("purchaseFromWarehouse", th.IntegerType),
         th.Property("viaCollectionWarehouse", th.IntegerType),
         th.Property("bebat", th.IntegerType),
         th.Property("extraCostQuantity", th.NumberType),
+        th.Property("isScale", th.BooleanType),
+        th.Property("hasServiceProduct", th.BooleanType),
+        th.Property("isServiceProduct", th.BooleanType),
         th.Property("mintatonPosDealId", th.StringType),
         th.Property("assortmentCode", th.StringType),
+        th.Property("warranty", th.IntegerType),
+        th.Property("resaleBonus", th.NumberType),
+        th.Property("resaleStart", th.DateTimeType),
+        th.Property("resaleEnd", th.DateTimeType),
+        th.Property("linkedProductId", th.IntegerType),
         th.Property("modifiedBy", th.StringType),
+        th.Property("createdBy", th.StringType),
+        th.Property("customerRequired", th.BooleanType),
+        th.Property("linkedSplitProductId", th.IntegerType),
+        th.Property("linkedSplitProductAmount", th.NumberType),
         th.Property("originCountryCode", th.StringType),
         th.Property("originCountry", th.StringType),
+        th.Property("webshopEnabled", th.BooleanType),
+        th.Property("webshopOrderable", th.BooleanType),
+        th.Property(
+            "suppliers",
+            th.ObjectType(
+                th.Property(
+                    "items",
+                    th.ArrayType(
+                        th.ObjectType(
+                            th.Property("productSupplierId", th.IntegerType),
+                            th.Property("productId", th.IntegerType),
+                            th.Property("supplierId", th.IntegerType),
+                            th.Property("supplierProductNumber", th.StringType),
+                            th.Property("minOrderQuantity", th.NumberType),
+                            th.Property("preferredDefaultSupplier", th.BooleanType),
+                            th.Property("recommendedSalesPriceInc", th.NumberType),
+                            th.Property("isDeleted", th.BooleanType),
+                            th.Property("supplierStock", th.NumberType),
+                            th.Property("expectedArrivalDatetime", th.DateTimeType),
+                            th.Property("deliveryDays", th.IntegerType),
+                            th.Property("availabilityStatusId", th.IntegerType),
+                            th.Property("supplierStock2", th.StringType),
+                            th.Property("lastModified", th.DateTimeType),
+                            th.Property("availabilityLock", th.BooleanType),
+                            th.Property("userAdded", th.BooleanType),
+                            th.Property("lockPreferredSupplier", th.BooleanType),
+                            th.Property("productSupplierSizeColorId", th.IntegerType),
+                            th.Property("productSizeColorId", th.IntegerType),
+                            th.Property("preferred", th.BooleanType),
+                            th.Property(
+                                "office",
+                                th.ObjectType(
+                                    th.Property("officeId", th.IntegerType),
+                                    th.Property("officeNumber", th.IntegerType),
+                                    th.Property("officeCode", th.StringType),
+                                    th.Property("officeName", th.StringType),
+                                    th.Property("countryId", th.IntegerType),
+                                    th.Property("senderEmail", th.StringType),
+                                    th.Property("mainOffice", th.BooleanType),
+                                    th.Property("defaultLanguageCode", th.StringType),
+                                    th.Property("maxWorkstation", th.IntegerType),
+                                    th.Property("licenseNumber", th.StringType),
+                                    th.Property("maxConcurrentUsers", th.IntegerType),
+                                    th.Property("expireDate", th.DateTimeType),
+                                    th.Property("addressId", th.IntegerType),
+                                    th.Property("dateFormat", th.StringType),
+                                    th.Property("invoiceAddressId", th.IntegerType),
+                                    th.Property("deliveryAddressId", th.IntegerType),
+                                    th.Property("phoneId", th.IntegerType),
+                                    th.Property("faxId", th.IntegerType),
+                                    th.Property("invoicePhoneId", th.IntegerType),
+                                    th.Property("invoiceFaxId", th.IntegerType),
+                                    th.Property("deliveryPhoneId", th.IntegerType),
+                                    th.Property("deliveryFaxId", th.IntegerType),
+                                    th.Property("senderEmailName", th.StringType),
+                                    th.Property("glnNumber", th.StringType),
+                                    th.Property("warehouseOffice", th.BooleanType),
+                                    th.Property("customerId", th.IntegerType),
+                                    th.Property("deliveryFromWarehouseOnly", th.BooleanType),
+                                    th.Property("useCollectionWarehouse", th.BooleanType),
+                                    th.Property("mondayOpen", th.DateTimeType),
+                                    th.Property("mondayClosed", th.DateTimeType),
+                                    th.Property("tuesdayOpen", th.DateTimeType),
+                                    th.Property("tuesdayClosed", th.DateTimeType),
+                                    th.Property("wednesdayOpen", th.DateTimeType),
+                                    th.Property("wednesdayClosed", th.DateTimeType),
+                                    th.Property("thursdayOpen", th.DateTimeType),
+                                    th.Property("thursdayClosed", th.DateTimeType),
+                                    th.Property("fridayOpen", th.DateTimeType),
+                                    th.Property("fridayClosed", th.DateTimeType),
+                                    th.Property("saterdayOpen", th.DateTimeType),
+                                    th.Property("saterdayClosed", th.DateTimeType),
+                                    th.Property("sundayOpen", th.DateTimeType),
+                                    th.Property("sundayClosed", th.DateTimeType),
+                                    th.Property("deliveryGlnNumber", th.StringType),
+                                    th.Property("externalCustomerNumber1", th.StringType),
+                                    th.Property("externalCustomerNumber2", th.StringType)
+                                )
+                            ),
+                            th.Property(
+                                "productPurchasePrice",
+                                th.ObjectType(
+                                    th.Property("productPurchasePriceId", th.IntegerType),
+                                    th.Property("productId", th.IntegerType),
+                                    th.Property("supplierId", th.IntegerType),
+                                    th.Property("officeId", th.IntegerType),
+                                    th.Property("purchasePriceEx", th.NumberType),
+                                    th.Property("productSizeColorId", th.IntegerType),
+                                    th.Property("brutoPurchasePriceEx", th.NumberType),
+                                    th.Property("paymentDiscount", th.NumberType)
+                                )
+                            ),
+                            th.Property(
+                                "productPurchaseHistory",
+                                th.ObjectType(
+                                    th.Property(
+                                        "items",
+                                        th.ArrayType(
+                                            th.ObjectType(
+                                                th.Property("purchaseOrderNumber", th.StringType),
+                                                th.Property("orderDatetime", th.DateTimeType),
+                                                th.Property("employeeId", th.IntegerType),
+                                                th.Property("employeeCode", th.StringType),
+                                                th.Property("employeeName", th.StringType),
+                                                th.Property("orderRemark", th.StringType),
+                                                th.Property("orderExpectedDeliveryWeek", th.IntegerType),
+                                                th.Property("orderExpectedDeliveryDate", th.DateTimeType),
+                                                th.Property("supplierProductNumber", th.StringType),
+                                                th.Property("productId", th.IntegerType),
+                                                th.Property("productSizeColorId", th.IntegerType),
+                                                th.Property("productNumber", th.StringType),
+                                                th.Property("productDescription", th.StringType),
+                                                th.Property("amount", th.NumberType),
+                                                th.Property("brutoPurchasePriceEx", th.NumberType),
+                                                th.Property("purchasePriceEx", th.NumberType),
+                                                th.Property("useFormula", th.BooleanType),
+                                                th.Property("onetimePurchasePrice", th.BooleanType),
+                                                th.Property("extraPriceInfo", th.StringType),
+                                                th.Property("assortmentCode", th.StringType),
+                                                th.Property("productPurchaseOrderId", th.IntegerType),
+                                                th.Property("supplierId", th.IntegerType)
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        ),
+        th.Property(
+            "salesPrices",
+            th.ObjectType(
+                th.Property(
+                    "items",
+                    th.ArrayType(
+                        th.ObjectType(
+                            th.Property("productSalesPriceId", th.IntegerType),
+                            th.Property("productId", th.IntegerType),
+                            th.Property("officeId", th.IntegerType),
+                            th.Property("lockSalesPrice", th.BooleanType),
+                            th.Property("salesPriceEx", th.NumberType),
+                            th.Property("salesPriceMarginProEx", th.NumberType),
+                            th.Property("minSalesPriceEx", th.NumberType),
+                            th.Property("minSalesPriceMarginProEx", th.NumberType),
+                            th.Property("recommendedSalesPriceEx", th.NumberType),
+                            th.Property("internetSalesPriceEx", th.NumberType),
+                            th.Property("internetSalesPriceMarginProEx", th.NumberType),
+                            th.Property("maxDiscountPercent", th.NumberType),
+                            th.Property("productSizeColorId", th.IntegerType),
+                            th.Property("lockMarginProEx", th.BooleanType),
+                            th.Property("resaleBonus", th.NumberType),
+                            th.Property("resaleBonusStart", th.DateTimeType),
+                            th.Property("resaleBonusEnd", th.DateTimeType)
+                        )
+                    )
+                )
+            )
+        ),
+        th.Property(
+            "productVats",
+            th.ObjectType(
+                th.Property(
+                    "items",
+                    th.ArrayType(
+                        th.ObjectType(
+                            th.Property("productVatId", th.IntegerType),
+                            th.Property("productId", th.IntegerType),
+                            th.Property("officeId", th.IntegerType),
+                            th.Property("vatId", th.IntegerType)
+                        )
+                    )
+                )
+            )
+        )
     ).to_dict()
 
     def __init__(self, tap: TapVendit):
