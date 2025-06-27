@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "tap-vendit"
+version = "0.1.0"
+description = "Singer tap for Vendit API"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+packages = [{include = "tap_vendit"}]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+singer-sdk = "^0.34.0"
+requests = "^2.31.0"
+
+[tool.poetry.scripts]
+tap-vendit = "tap_vendit.tap:TapVendit.cli"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
