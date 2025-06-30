@@ -43,7 +43,8 @@
     "supplierBankAccountAssortmentCode": {"type": "string"},
     "supplierBankAccountCountryCode": {"type": "string"},
     "supplierBankAccountCountry": {"type": "string"},
-    "supplierBankAccountVatNumber": {"type": "string"}
+    "supplierBankAccountVatNumber": {"type": "string"},
+    "deliveryDays": {"type": "integer"}
   },
   "required": ["supplierId"]
 } 
