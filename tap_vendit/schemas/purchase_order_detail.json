@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "productPurchaseOrderDetailId": {"type": "integer"},
+    "productPurchaseOrderId": {"type": "integer"},
+    "productId": {"type": "integer"},
+    "supplierProductNumber": {"type": "string"},
+    "productNumber": {"type": "string"},
+    "productType": {"type": "string"},
+    "productDescription": {"type": "string"},
+    "productSubdescription": {"type": "string"},
+    "productExtraInfo": {"type": "string"},
+    "amount": {"type": "number"},
+    "purchasePriceEx": {"type": "number"},
+    "minOrderQuantity": {"type": "number"},
+    "expectedDeliveryWeek": {"type": "integer"},
+    "expectedDeliveryDate": {"type": "string", "format": "date-time"},
+    "webserviceStatusEnum": {"type": "integer"},
+    "orderDetailRemark": {"type": "string"},
+    "extraPriceInfo": {"type": "string"},
+    "assortmentCode": {"type": "string"},
+    "promotionProductId": {"type": "integer"},
+    "lineId": {"type": "string"}
+  },
+  "required": ["productPurchaseOrderDetailId"]
+} 

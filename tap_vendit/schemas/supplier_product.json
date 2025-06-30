@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "productSupplierId": {"type": "integer"},
+    "productId": {"type": "integer"},
+    "supplierId": {"type": "integer"},
+    "supplierProductNumber": {"type": "string"},
+    "minOrderQuantity": {"type": "number"},
+    "preferredDefaultSupplier": {"type": "boolean"},
+    "recommendedSalesPriceInc": {"type": "number"},
+    "expectedArrivalDatetime": {"type": "string", "format": "date-time"},
+    "availabilityStatusId": {"type": "integer"},
+    "supplierStock2": {"type": "string"},
+    "lastModified": {"type": "string", "format": "date-time"},
+    "productPurchasePriceId": {"type": "integer"},
+    "purchasePriceEx": {"type": "number"},
+    "unix_timestamp": {"type": "integer"}
+  },
+  "required": ["productSupplierId"]
+} 

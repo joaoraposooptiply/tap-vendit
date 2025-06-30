@@ -18,6 +18,7 @@ from tap_vendit.streams import (
     PurchaseOrdersStream,
     PurchaseOrdersOptiplyStream,
     SupplierProductsStream,
+    OrdersOptiplyStream,
 )
 
 STREAM_TYPES = [
@@ -27,6 +28,7 @@ STREAM_TYPES = [
     PurchaseOrdersStream,
     PurchaseOrdersOptiplyStream,
     SupplierProductsStream,
+    OrdersOptiplyStream,
 ]
 
 class TapVendit(Tap):

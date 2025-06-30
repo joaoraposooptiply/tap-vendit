@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "productPurchaseOrderId": {"type": "integer"},
+    "officeId": {"type": "integer"},
+    "purchaseOrderNumber": {"type": "string"},
+    "supplierId": {"type": "integer"},
+    "orderDatetime": {"type": "string", "format": "date-time"},
+    "orderReference": {"type": "string"},
+    "preorderEmployeeId": {"type": "integer"},
+    "employeeId": {"type": "integer"},
+    "onlineOrderReference": {"type": "string"},
+    "orderRemark": {"type": "string"},
+    "details": {
+      "type": "object",
+      "properties": {
+        "lookups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "fieldName": {"type": "string"},
+              "lookupValues": {
+                "type": "object",
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": { "$ref": "product.json" }
+                  }
+                }
+              },
+              "lookupType": {"type": "string"},
+              "pkType": {"type": "string"}
+            }
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "purchase_order_detail.json" }
+        }
+      }
+    },
+    "unix_timestamp": {"type": "integer"}
+  },
+  "required": ["productPurchaseOrderId"]
+} 
