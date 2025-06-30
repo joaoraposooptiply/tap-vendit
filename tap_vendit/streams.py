@@ -127,8 +127,8 @@ class BaseOptiplyStream(BaseStream):
     replication_key = "unix_timestamp"
     
     def get_starting_unix(self) -> int:
-        """Get the starting unix timestamp (Jan 1st, 2022)."""
-        return 1640995200000
+        """Get the starting unix timestamp (Jan 1st, 1970 - Unix epoch)."""
+        return 0 
 
     def get_current_unix(self) -> int:
         """Get current unix timestamp in milliseconds."""
