@@ -23,7 +23,10 @@ SCHEMAS_DIR = os.path.join(os.path.dirname(__file__), "schemas")
 
 # Constants for common field IDs and values
 FIELD_IDS = {
-    "LAST_MODIFIED": 204,
+    "LAST_MODIFIED": 204,  # Products
+    "LAST_MODIFIED_ORDERS": 524,  # Orders
+    "LAST_MODIFIED_PURCHASE_ORDERS": 524,  # Purchase Orders (same as orders)
+    "ORDER_DATE_TIME": 200,  # Purchase Orders orderDateTime
     "CREATION_DATE": 205,
 }
 
@@ -107,6 +110,8 @@ class BaseFindStream(BaseStream):
             }
             
             url = f"{self.config['api_url']}{self.path}"
+            
+            # Debug logging
             response = self._request("POST", url, json=payload)
             data = self._parse_json_response(response, f"finding {self.name} IDs")
             
@@ -128,7 +133,7 @@ class BaseOptiplyStream(BaseStream):
     
     def get_starting_unix(self) -> int:
         """Get the starting unix timestamp (Jan 1st, 1970 - Unix epoch)."""
-        return 0 
+        return 1735693261000 
 
     def get_current_unix(self) -> int:
         """Get current unix timestamp in milliseconds."""
@@ -186,7 +191,7 @@ class BaseFindGetMultipleStream(BaseFindStream):
         
         # Get IDs using the Find endpoint
         all_ids = self.get_all_ids_with_filter(
-            field_id=FIELD_IDS["LAST_MODIFIED"], 
+            field_id=FIELD_IDS["LAST_MODIFIED_ORDERS"], 
             start_date=start_date
         )
         
@@ -255,13 +260,69 @@ class ProductsStream(BaseFindGetMultipleStream):
     """Products stream using Find → GetMultiple pattern."""
     name = "products"
     primary_keys = ["productId"]
-    replication_key = "LastModified"
+    replication_key = "lastModified"
     records_jsonpath = "$.items[*]"
     schema = load_schema("product.json")
 
     @property
     def path(self):
         return "/VenditPublicApi/Products/GetMultiple"
+
+    def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
+        """Override to use correct field ID for products."""
+        self.logger.info(f"Step 1: Finding {self.name} IDs...")
+        start_date = self.get_starting_time(context)
+        
+        # Use the correct Find endpoint for products
+        find_url = f"{self.config['api_url']}/VenditPublicApi/Products/Find"
+        all_ids = []
+        offset = 0
+        
+        while True:
+            payload = {
+                "fieldFilters": [
+                    {
+                        "field": FIELD_IDS["LAST_MODIFIED_ORDERS"],
+                        "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000"),
+                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"]
+                    }
+                ],
+                "paginationOffset": offset,
+                "operator": 0
+            }
+            
+            response = self._request("POST", find_url, json=payload)
+            data = self._parse_json_response(response, "finding product IDs")
+            
+            ids = data.get("results", [])
+            if not ids:
+                break
+                
+            all_ids.extend([str(i) for i in ids if i])
+            if len(ids) < DEFAULT_PAGE_SIZE:
+                break
+            offset += DEFAULT_PAGE_SIZE
+            
+        if not all_ids:
+            self.logger.warning(f"No {self.name} IDs found")
+            return
+            
+        self.logger.info(f"Found {len(all_ids)} {self.name} IDs")
+        self.logger.info("Step 2: Getting details...")
+        
+        # Get details in batches
+        for i in range(0, len(all_ids), DEFAULT_BATCH_SIZE):
+            batch = all_ids[i:i + DEFAULT_BATCH_SIZE]
+            url = f"{self.config['api_url']}{self.path}"
+            response = self._request("POST", url, json={"primaryKeys": batch})
+            
+            if response.status_code != 200:
+                self.logger.error(f"Error fetching {self.name} batch: {response.status_code}")
+                continue
+                
+            data = self._parse_json_response(response, f"fetching {self.name} batch")
+            for item in data.get("items", []):
+                yield item
 
 class SuppliersStream(BaseFindGetMultipleStream):
     """Suppliers stream using Find → GetMultiple pattern."""
@@ -310,13 +371,68 @@ class OrdersStream(BaseFindGetWithDetailsStream):
     """Orders stream using Find → GetWithDetails pattern."""
     name = "orders"
     primary_keys = ["customerOrderHeaderId"]
-    replication_key = "LastModified"
     records_jsonpath = "$"
     schema = load_schema("order.json")
 
     @property
     def path(self):
         return "/VenditPublicApi/Orders/GetWithDetails"
+
+    def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
+        """Override to use correct field ID for orders."""
+        self.logger.info(f"Step 1: Finding {self.name} IDs...")
+        start_date = self.get_starting_time(context)
+        
+        # Use the correct Find endpoint for orders
+        find_url = f"{self.config['api_url']}/VenditPublicApi/Orders/Find"
+        all_ids = []
+        offset = 0
+        
+        while True:
+            payload = {
+                "fieldFilters": [
+                    {
+                        "field": FIELD_IDS["LAST_MODIFIED_ORDERS"],
+                        "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000"),
+                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"]
+                    }
+                ],
+                "paginationOffset": offset,
+                "paginationLimit": DEFAULT_PAGE_SIZE,
+                "operator": 0
+            }
+            
+            response = self._request("POST", find_url, json=payload)
+            data = self._parse_json_response(response, "finding order IDs")
+            
+            ids = data.get("results", [])
+            if not ids:
+                break
+                
+            all_ids.extend([str(i) for i in ids if i])
+            if len(ids) < DEFAULT_PAGE_SIZE:
+                break
+            offset += DEFAULT_PAGE_SIZE
+            
+        if not all_ids:
+            self.logger.warning(f"No {self.name} IDs found")
+            return
+            
+        self.logger.info(f"Found {len(all_ids)} {self.name} IDs")
+        self.logger.info("Step 2: Getting details...")
+        
+        # Get individual details
+        for item_id in all_ids:
+            url = f"{self.config['api_url']}{self.path}/{item_id}"
+            response = self._request("GET", url)
+            
+            if response.status_code != 200:
+                self.logger.error(f"Error fetching {self.name} {item_id}: {response.status_code}")
+                continue
+                
+            data = self._parse_json_response(response, f"fetching {self.name} {item_id}")
+            if data:
+                yield data
 
 class PurchaseOrdersStream(BaseFindGetWithDetailsStream):
     """Purchase Orders stream using Find → GetWithDetails pattern."""
@@ -331,16 +447,11 @@ class PurchaseOrdersStream(BaseFindGetWithDetailsStream):
         return "/VenditPublicApi/PurchaseOrders/GetWithDetails"
 
     def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
-        """Override to handle date range filtering for purchase orders."""
+        """Override to use correct field ID for purchase orders."""
         self.logger.info("Step 1: Finding purchase order IDs...")
+        start_date = self.get_starting_time(context)
         
-        start_date = self.config.get("start_date")
-        end_date = self.config.get("end_date")
-        if not start_date or not end_date:
-            self.logger.error("start_date and end_date are required in config")
-            return
-            
-        # Use date range filtering
+        # Use the correct Find endpoint for purchase orders with orderDateTime field
         find_url = f"{self.config['api_url']}/VenditPublicApi/PurchaseOrders/Find"
         all_ids = []
         offset = 0
@@ -349,13 +460,12 @@ class PurchaseOrdersStream(BaseFindGetWithDetailsStream):
             payload = {
                 "fieldFilters": [
                     {
-                        "field": FIELD_IDS["LAST_MODIFIED"],
-                        "value": start_date,
+                        "field": FIELD_IDS["ORDER_DATE_TIME"],
+                        "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000"),
                         "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"]
                     }
                 ],
                 "paginationOffset": offset,
-                "paginationLimit": DEFAULT_PAGE_SIZE,
                 "operator": 0
             }
             

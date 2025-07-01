@@ -19,6 +19,7 @@
     "orderStatusSortOrder": {"type": "integer"},
     "orderStatusIsDeleted": {"type": "boolean"},
     "orderStatusLastModified": {"type": "string", "format": "date-time"},
+    "LastModified": {"type": "string", "format": "date-time"},
     "orderStatusIsModified": {"type": "boolean"},
     "orderStatusSearchCode": {"type": "string"},
     "orderStatusAssortmentCode": {"type": "string"},

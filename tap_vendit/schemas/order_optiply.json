@@ -131,7 +131,8 @@
     "statusEmployeeId": {"type": "integer"},
     "url": {"type": "string"},
     "dropshipmentType": {"type": "integer"},
-    "purchaseOrderNumber": {"type": "string"}
+    "purchaseOrderNumber": {"type": "string"},
+    "unix_timestamp": {"type": "integer"}
   },
   "required": ["customerOrderHeaderId"]
 } 

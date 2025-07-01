@@ -1,0 +1,2954 @@
+{
+  "streams": [
+    {
+      "tap_stream_id": "orders",
+      "replication_method": "FULL_TABLE",
+      "key_properties": [
+        "customerOrderHeaderId"
+      ],
+      "schema": {
+        "properties": {
+          "customerOrderHeaderId": {
+            "type": "integer"
+          },
+          "officeId": {
+            "type": "integer"
+          },
+          "customerOrderNumber": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": "integer"
+          },
+          "orderDatetime": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "orderReference": {
+            "type": "string"
+          },
+          "preorderEmployeeId": {
+            "type": "integer"
+          },
+          "employeeId": {
+            "type": "integer"
+          },
+          "onlineOrderReference": {
+            "type": "string"
+          },
+          "orderRemark": {
+            "type": "string"
+          },
+          "orderStatusId": {
+            "type": "integer"
+          },
+          "orderStatusDescription": {
+            "type": "string"
+          },
+          "orderStatusColor": {
+            "type": "string"
+          },
+          "orderStatusIcon": {
+            "type": "string"
+          },
+          "orderStatusSortOrder": {
+            "type": "integer"
+          },
+          "orderStatusIsDeleted": {
+            "type": "boolean"
+          },
+          "orderStatusLastModified": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "orderStatusIsModified": {
+            "type": "boolean"
+          },
+          "orderStatusSearchCode": {
+            "type": "string"
+          },
+          "orderStatusAssortmentCode": {
+            "type": "string"
+          },
+          "orderStatusCountryCode": {
+            "type": "string"
+          },
+          "orderStatusCountry": {
+            "type": "string"
+          },
+          "orderStatusVatNumber": {
+            "type": "string"
+          },
+          "orderStatusBankAccount": {
+            "type": "string"
+          },
+          "orderStatusBankName": {
+            "type": "string"
+          },
+          "orderStatusBankBic": {
+            "type": "string"
+          },
+          "orderStatusBankIban": {
+            "type": "string"
+          },
+          "orderStatusBankSwift": {
+            "type": "string"
+          },
+          "orderStatusBankAccountName": {
+            "type": "string"
+          },
+          "orderStatusBankAccountNumber": {
+            "type": "string"
+          },
+          "orderStatusBankAccountType": {
+            "type": "string"
+          },
+          "orderStatusBankAccountCurrency": {
+            "type": "string"
+          },
+          "orderStatusBankAccountDescription": {
+            "type": "string"
+          },
+          "orderStatusBankAccountRemark": {
+            "type": "string"
+          },
+          "orderStatusBankAccountGuid": {
+            "type": "string"
+          },
+          "orderStatusBankAccountIsDeleted": {
+            "type": "boolean"
+          },
+          "orderStatusBankAccountLastModified": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "orderStatusBankAccountIsModified": {
+            "type": "boolean"
+          },
+          "orderStatusBankAccountSearchCode": {
+            "type": "string"
+          },
+          "orderStatusBankAccountAssortmentCode": {
+            "type": "string"
+          },
+          "orderStatusBankAccountCountryCode": {
+            "type": "string"
+          },
+          "orderStatusBankAccountCountry": {
+            "type": "string"
+          },
+          "orderStatusBankAccountVatNumber": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customerOrderHeaderId"
+        ]
+      },
+      "stream": "orders",
+      "metadata": [
+        {
+          "breadcrumb": [
+            "properties",
+            "customerOrderHeaderId"
+          ],
+          "metadata": {
+            "inclusion": "automatic"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "officeId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "customerOrderNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "customerId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderDatetime"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderReference"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "preorderEmployeeId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "employeeId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "onlineOrderReference"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderRemark"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusDescription"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusColor"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusIcon"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusSortOrder"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusIsDeleted"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusLastModified"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusIsModified"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusSearchCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusAssortmentCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusCountryCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusCountry"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusVatNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccount"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankName"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankBic"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankIban"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankSwift"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountName"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountType"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountCurrency"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountDescription"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountRemark"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountGuid"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountIsDeleted"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountLastModified"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountIsModified"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountSearchCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountAssortmentCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountCountryCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountCountry"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusBankAccountVatNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [],
+          "metadata": {
+            "inclusion": "available",
+            "selected": true,
+            "selected-by-default": true,
+            "table-key-properties": [
+              "customerOrderHeaderId"
+            ],
+            "valid-replication-keys": [
+              "LastModified"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "tap_stream_id": "orders_optiply",
+      "replication_key": "unix_timestamp",
+      "replication_method": "INCREMENTAL",
+      "key_properties": [
+        "customerOrderHeaderId"
+      ],
+      "schema": {
+        "properties": {
+          "customerOrderHeaderId": {
+            "type": "integer"
+          },
+          "orderDetails": {
+            "properties": {
+              "items": {
+                "items": {
+                  "properties": {
+                    "customerOrderDetailId": {
+                      "type": "integer"
+                    },
+                    "customerOrderHeaderId": {
+                      "type": "integer"
+                    },
+                    "detailId": {
+                      "type": "integer"
+                    },
+                    "productId": {
+                      "type": "integer"
+                    },
+                    "productNumber": {
+                      "type": "string"
+                    },
+                    "productType": {
+                      "type": "string"
+                    },
+                    "productDescription": {
+                      "type": "string"
+                    },
+                    "productSubdescription": {
+                      "type": "string"
+                    },
+                    "productGroupId": {
+                      "type": "integer"
+                    },
+                    "brandId": {
+                      "type": "integer"
+                    },
+                    "productColorCode": {
+                      "type": "string"
+                    },
+                    "productColorName": {
+                      "type": "string"
+                    },
+                    "productSizeName": {
+                      "type": "string"
+                    },
+                    "productQuantity": {
+                      "type": "number"
+                    },
+                    "productSalesPriceEx": {
+                      "type": "number"
+                    },
+                    "productTotalDiscountEx": {
+                      "type": "number"
+                    },
+                    "productTotalDiscountProEx": {
+                      "type": "number"
+                    },
+                    "productTotalSalesPriceEx": {
+                      "type": "number"
+                    },
+                    "productTotalSalesPriceInc": {
+                      "type": "number"
+                    },
+                    "vatId": {
+                      "type": "integer"
+                    },
+                    "frameNumber": {
+                      "type": "string"
+                    },
+                    "lockNumber": {
+                      "type": "string"
+                    },
+                    "keyNumber": {
+                      "type": "string"
+                    },
+                    "dataTagNumber": {
+                      "type": "string"
+                    },
+                    "serialNumber": {
+                      "type": "string"
+                    },
+                    "imeiNumber": {
+                      "type": "string"
+                    },
+                    "tradeInPurchasePrice": {
+                      "type": "number"
+                    },
+                    "preorderId": {
+                      "type": "integer"
+                    },
+                    "sortOrder": {
+                      "type": "integer"
+                    },
+                    "productKindDescription": {
+                      "type": "string"
+                    },
+                    "brancheId": {
+                      "type": "integer"
+                    },
+                    "stockStatusEnum": {
+                      "type": "integer"
+                    },
+                    "licensePlateNumber": {
+                      "type": "string"
+                    },
+                    "licensePlateMeldcode": {
+                      "type": "string"
+                    },
+                    "motorNumber": {
+                      "type": "string"
+                    },
+                    "turnoverEmployeeId": {
+                      "type": "integer"
+                    },
+                    "invoiceDiscountEx": {
+                      "type": "number"
+                    },
+                    "invoiceDiscountInc": {
+                      "type": "number"
+                    },
+                    "linkId": {
+                      "type": "integer"
+                    },
+                    "tradeInIdNumber": {
+                      "type": "string"
+                    },
+                    "brandName": {
+                      "type": "string"
+                    },
+                    "tradeInMemo": {
+                      "type": "string"
+                    },
+                    "overruleAvailabilityStatus": {
+                      "type": "boolean"
+                    },
+                    "stockLocationId": {
+                      "type": "integer"
+                    },
+                    "passportNumber": {
+                      "type": "string"
+                    },
+                    "tradeInOfficeId": {
+                      "type": "integer"
+                    },
+                    "stockOfficeId": {
+                      "type": "integer"
+                    },
+                    "displayNumber": {
+                      "type": "string"
+                    },
+                    "batteryNumber": {
+                      "type": "string"
+                    },
+                    "extraOrderInformation": {
+                      "type": "string"
+                    },
+                    "orderDetailActive": {
+                      "type": "boolean"
+                    },
+                    "tradeInSalePrice": {
+                      "type": "number"
+                    },
+                    "extraProductCostsId": {
+                      "type": "integer"
+                    },
+                    "extraProductCostsGroupGuid": {
+                      "type": "string"
+                    },
+                    "returnFromSaleDetailId": {
+                      "type": "integer"
+                    },
+                    "reportPurchasePriceEx": {
+                      "type": "number"
+                    },
+                    "reportPurchasePriceInc": {
+                      "type": "number"
+                    },
+                    "reportTotalVatAmount": {
+                      "type": "number"
+                    },
+                    "reportTotalMarginProEx": {
+                      "type": "number"
+                    },
+                    "reportTotalMarginEx": {
+                      "type": "number"
+                    },
+                    "assortmentCode": {
+                      "type": "string"
+                    },
+                    "mileage": {
+                      "type": "string"
+                    },
+                    "resaleBonus": {
+                      "type": "number"
+                    },
+                    "combinationDiscountId": {
+                      "type": "integer"
+                    },
+                    "combinationDiscountQuantity": {
+                      "type": "number"
+                    },
+                    "totalDiscountInc": {
+                      "type": "number"
+                    },
+                    "purchaseOrderNumber": {
+                      "type": "string"
+                    },
+                    "purchaseOrderAmount": {
+                      "type": "number"
+                    },
+                    "isUnitProduct": {
+                      "type": "boolean"
+                    },
+                    "registeredDiscountType": {
+                      "type": "integer"
+                    },
+                    "isCopyLevy": {
+                      "type": "boolean"
+                    },
+                    "isDropshipment": {
+                      "type": "boolean"
+                    },
+                    "leaseContractNumber": {
+                      "type": "string"
+                    },
+                    "leaseVehicleNumber": {
+                      "type": "string"
+                    },
+                    "keyNumber2": {
+                      "type": "string"
+                    },
+                    "bikeImeiNumber": {
+                      "type": "string"
+                    },
+                    "vinNumber": {
+                      "type": "string"
+                    },
+                    "velopassNumber": {
+                      "type": "string"
+                    },
+                    "certificateNumber": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object",
+                  "required": [
+                    "customerOrderDetailId",
+                    "customerOrderHeaderId"
+                  ]
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "customerId": {
+            "type": "integer"
+          },
+          "officeId": {
+            "type": "integer"
+          },
+          "employeeId": {
+            "type": "integer"
+          },
+          "planningId": {
+            "type": "integer"
+          },
+          "customerOrderNumber": {
+            "type": "string"
+          },
+          "creationDatetime": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "orderTypeId": {
+            "type": "integer"
+          },
+          "orderPriorityId": {
+            "type": "integer"
+          },
+          "deliveryDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "activationDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "orderStatusId": {
+            "type": "integer"
+          },
+          "completeDelivery": {
+            "type": "boolean"
+          },
+          "deliveryNotificationType": {
+            "type": "integer"
+          },
+          "invoiceAddressId": {
+            "type": "integer"
+          },
+          "invoiceContactId": {
+            "type": "integer"
+          },
+          "deliveryAddressId": {
+            "type": "integer"
+          },
+          "deliveryContactId": {
+            "type": "integer"
+          },
+          "journalId": {
+            "type": "integer"
+          },
+          "stockStatusEnum": {
+            "type": "integer"
+          },
+          "saleExVat": {
+            "type": "boolean"
+          },
+          "invoiceDiscountPercentage": {
+            "type": "number"
+          },
+          "invoiceDiscountAmount": {
+            "type": "number"
+          },
+          "discountIsPercentage": {
+            "type": "boolean"
+          },
+          "baselineReferenceNumber": {
+            "type": "string"
+          },
+          "orderLabelNumber": {
+            "type": "string"
+          },
+          "orderStatusDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "orderStatusDateFormat": {
+            "type": "string"
+          },
+          "orderSubTitle": {
+            "type": "string"
+          },
+          "telecomReferenceNumber": {
+            "type": "string"
+          },
+          "originalWorkstationId": {
+            "type": "integer"
+          },
+          "originalDrawerId": {
+            "type": "integer"
+          },
+          "internalMemo": {
+            "type": "string"
+          },
+          "statusEmployeeId": {
+            "type": "integer"
+          },
+          "url": {
+            "type": "string"
+          },
+          "dropshipmentType": {
+            "type": "integer"
+          },
+          "purchaseOrderNumber": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customerOrderHeaderId"
+        ]
+      },
+      "stream": "orders_optiply",
+      "metadata": [
+        {
+          "breadcrumb": [
+            "properties",
+            "customerOrderHeaderId"
+          ],
+          "metadata": {
+            "inclusion": "automatic"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderDetails"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "customerId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "officeId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "employeeId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "planningId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "customerOrderNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "creationDatetime"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderTypeId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderPriorityId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "deliveryDate"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "activationDate"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "completeDelivery"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "deliveryNotificationType"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "invoiceAddressId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "invoiceContactId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "deliveryAddressId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "deliveryContactId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "journalId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "stockStatusEnum"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "saleExVat"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "invoiceDiscountPercentage"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "invoiceDiscountAmount"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "discountIsPercentage"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "baselineReferenceNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderLabelNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusDate"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderStatusDateFormat"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderSubTitle"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "telecomReferenceNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "originalWorkstationId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "originalDrawerId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "internalMemo"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "statusEmployeeId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "url"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "dropshipmentType"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "purchaseOrderNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [],
+          "metadata": {
+            "inclusion": "available",
+            "selected": true,
+            "selected-by-default": true,
+            "table-key-properties": [
+              "customerOrderHeaderId"
+            ],
+            "valid-replication-keys": [
+              "unix_timestamp"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "tap_stream_id": "products",
+      "replication_key": "lastModified",
+      "replication_method": "INCREMENTAL",
+      "key_properties": [
+        "productId"
+      ],
+      "schema": {
+        "properties": {
+          "productId": {
+            "type": "integer"
+          },
+          "groupId": {
+            "type": "integer"
+          },
+          "brandId": {
+            "type": "integer"
+          },
+          "brancheId": {
+            "type": "integer"
+          },
+          "productNumber": {
+            "type": "string"
+          },
+          "productType": {
+            "type": "string"
+          },
+          "productKindId": {
+            "type": "integer"
+          },
+          "productDescription": {
+            "type": "string"
+          },
+          "productSubdescription": {
+            "type": "string"
+          },
+          "additionalInfo": {
+            "type": "string"
+          },
+          "useStock": {
+            "type": "boolean"
+          },
+          "salesVisibilityId": {
+            "type": "integer"
+          },
+          "availabilityStatusId": {
+            "type": "integer"
+          },
+          "creationDatetime": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "allowInvoiceDiscount": {
+            "type": "boolean"
+          },
+          "lastModified": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "isModified": {
+            "type": "boolean"
+          },
+          "productGuid": {
+            "type": "string"
+          },
+          "memoCommon": {
+            "type": "string"
+          },
+          "memoEcommerce": {
+            "type": "string"
+          },
+          "isDeleted": {
+            "type": "boolean"
+          },
+          "productSize": {
+            "type": "string"
+          },
+          "modelSeason": {
+            "type": "string"
+          },
+          "productColor": {
+            "type": "string"
+          },
+          "useGroupInvoiceDiscount": {
+            "type": "boolean"
+          },
+          "salesUnitId": {
+            "type": "integer"
+          },
+          "salesUnitQuantity": {
+            "type": "number"
+          },
+          "hintInfo": {
+            "type": "string"
+          },
+          "productSearchCode": {
+            "type": "string"
+          },
+          "isBaseProduct": {
+            "type": "boolean"
+          },
+          "deliveryFromWarehouse": {
+            "type": "integer"
+          },
+          "purchaseFromWarehouse": {
+            "type": "integer"
+          },
+          "viaCollectionWarehouse": {
+            "type": "integer"
+          },
+          "bebat": {
+            "type": "integer"
+          },
+          "extraCostQuantity": {
+            "type": "number"
+          },
+          "mintatonPosDealId": {
+            "type": "string"
+          },
+          "assortmentCode": {
+            "type": "string"
+          },
+          "modifiedBy": {
+            "type": "string"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "originCountryCode": {
+            "type": "string"
+          },
+          "originCountry": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "productId"
+        ]
+      },
+      "stream": "products",
+      "metadata": [
+        {
+          "breadcrumb": [
+            "properties",
+            "productId"
+          ],
+          "metadata": {
+            "inclusion": "automatic"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "groupId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "brandId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "brancheId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productType"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productKindId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productDescription"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productSubdescription"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "additionalInfo"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "useStock"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "salesVisibilityId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "availabilityStatusId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "creationDatetime"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "allowInvoiceDiscount"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "lastModified"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "isModified"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productGuid"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "memoCommon"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "memoEcommerce"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "isDeleted"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productSize"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "modelSeason"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productColor"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "useGroupInvoiceDiscount"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "salesUnitId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "salesUnitQuantity"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "hintInfo"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productSearchCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "isBaseProduct"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "deliveryFromWarehouse"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "purchaseFromWarehouse"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "viaCollectionWarehouse"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "bebat"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "extraCostQuantity"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "mintatonPosDealId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "assortmentCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "modifiedBy"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "createdBy"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "originCountryCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "originCountry"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [],
+          "metadata": {
+            "inclusion": "available",
+            "selected": true,
+            "selected-by-default": true,
+            "table-key-properties": [
+              "productId"
+            ],
+            "valid-replication-keys": [
+              "lastModified"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "tap_stream_id": "purchase_orders",
+      "replication_method": "FULL_TABLE",
+      "key_properties": [
+        "productPurchaseOrderId"
+      ],
+      "schema": {
+        "properties": {
+          "productPurchaseOrderId": {
+            "type": "integer"
+          },
+          "officeId": {
+            "type": "integer"
+          },
+          "purchaseOrderNumber": {
+            "type": "string"
+          },
+          "supplierId": {
+            "type": "integer"
+          },
+          "orderDatetime": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "orderReference": {
+            "type": "string"
+          },
+          "preorderEmployeeId": {
+            "type": "integer"
+          },
+          "employeeId": {
+            "type": "integer"
+          },
+          "onlineOrderReference": {
+            "type": "string"
+          },
+          "orderRemark": {
+            "type": "string"
+          },
+          "details": {
+            "properties": {
+              "items": {
+                "items": {},
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object",
+        "required": [
+          "productPurchaseOrderId"
+        ]
+      },
+      "stream": "purchase_orders",
+      "metadata": [
+        {
+          "breadcrumb": [
+            "properties",
+            "productPurchaseOrderId"
+          ],
+          "metadata": {
+            "inclusion": "automatic"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "officeId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "purchaseOrderNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderDatetime"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderReference"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "preorderEmployeeId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "employeeId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "onlineOrderReference"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderRemark"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "details"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [],
+          "metadata": {
+            "inclusion": "available",
+            "selected": true,
+            "selected-by-default": true,
+            "table-key-properties": [
+              "productPurchaseOrderId"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "tap_stream_id": "purchase_orders_optiply",
+      "replication_key": "unix_timestamp",
+      "replication_method": "INCREMENTAL",
+      "key_properties": [
+        "productPurchaseOrderId"
+      ],
+      "schema": {
+        "properties": {
+          "productPurchaseOrderId": {
+            "type": "integer"
+          },
+          "officeId": {
+            "type": "integer"
+          },
+          "purchaseOrderNumber": {
+            "type": "string"
+          },
+          "supplierId": {
+            "type": "integer"
+          },
+          "orderDatetime": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "orderReference": {
+            "type": "string"
+          },
+          "preorderEmployeeId": {
+            "type": "integer"
+          },
+          "employeeId": {
+            "type": "integer"
+          },
+          "onlineOrderReference": {
+            "type": "string"
+          },
+          "orderRemark": {
+            "type": "string"
+          },
+          "details": {
+            "properties": {
+              "lookups": {
+                "items": {
+                  "properties": {
+                    "fieldName": {
+                      "type": "string"
+                    },
+                    "lookupValues": {
+                      "properties": {
+                        "items": {
+                          "items": {},
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "lookupType": {
+                      "type": "string"
+                    },
+                    "pkType": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "items": {
+                "items": {},
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "unix_timestamp": {
+            "type": "integer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "productPurchaseOrderId"
+        ]
+      },
+      "stream": "purchase_orders_optiply",
+      "metadata": [
+        {
+          "breadcrumb": [
+            "properties",
+            "productPurchaseOrderId"
+          ],
+          "metadata": {
+            "inclusion": "automatic"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "officeId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "purchaseOrderNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderDatetime"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderReference"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "preorderEmployeeId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "employeeId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "onlineOrderReference"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "orderRemark"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "details"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "unix_timestamp"
+          ],
+          "metadata": {
+            "inclusion": "automatic"
+          }
+        },
+        {
+          "breadcrumb": [],
+          "metadata": {
+            "inclusion": "available",
+            "selected": true,
+            "selected-by-default": true,
+            "table-key-properties": [
+              "productPurchaseOrderId"
+            ],
+            "valid-replication-keys": [
+              "unix_timestamp"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "tap_stream_id": "supplier_products",
+      "replication_key": "unix_timestamp",
+      "replication_method": "INCREMENTAL",
+      "key_properties": [
+        "productSupplierId"
+      ],
+      "schema": {
+        "properties": {
+          "productSupplierId": {
+            "type": "integer"
+          },
+          "productId": {
+            "type": "integer"
+          },
+          "supplierId": {
+            "type": "integer"
+          },
+          "supplierProductNumber": {
+            "type": "string"
+          },
+          "minOrderQuantity": {
+            "type": "number"
+          },
+          "preferredDefaultSupplier": {
+            "type": "boolean"
+          },
+          "recommendedSalesPriceInc": {
+            "type": "number"
+          },
+          "expectedArrivalDatetime": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "availabilityStatusId": {
+            "type": "integer"
+          },
+          "supplierStock2": {
+            "type": "string"
+          },
+          "lastModified": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "productPurchasePriceId": {
+            "type": "integer"
+          },
+          "purchasePriceEx": {
+            "type": "number"
+          },
+          "unix_timestamp": {
+            "type": "integer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "productSupplierId"
+        ]
+      },
+      "stream": "supplier_products",
+      "metadata": [
+        {
+          "breadcrumb": [
+            "properties",
+            "productSupplierId"
+          ],
+          "metadata": {
+            "inclusion": "automatic"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierProductNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "minOrderQuantity"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "preferredDefaultSupplier"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "recommendedSalesPriceInc"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "expectedArrivalDatetime"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "availabilityStatusId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierStock2"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "lastModified"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productPurchasePriceId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "purchasePriceEx"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "unix_timestamp"
+          ],
+          "metadata": {
+            "inclusion": "automatic"
+          }
+        },
+        {
+          "breadcrumb": [],
+          "metadata": {
+            "inclusion": "available",
+            "selected": true,
+            "selected-by-default": true,
+            "table-key-properties": [
+              "productSupplierId"
+            ],
+            "valid-replication-keys": [
+              "unix_timestamp"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "tap_stream_id": "suppliers",
+      "replication_method": "FULL_TABLE",
+      "key_properties": [
+        "supplierId"
+      ],
+      "schema": {
+        "properties": {
+          "supplierId": {
+            "type": "integer"
+          },
+          "officeId": {
+            "type": "integer"
+          },
+          "supplierNumber": {
+            "type": "string"
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "supplierType": {
+            "type": "string"
+          },
+          "supplierDescription": {
+            "type": "string"
+          },
+          "supplierSubdescription": {
+            "type": "string"
+          },
+          "supplierExtraInfo": {
+            "type": "string"
+          },
+          "supplierEmail": {
+            "type": "string"
+          },
+          "supplierPhone": {
+            "type": "string"
+          },
+          "supplierFax": {
+            "type": "string"
+          },
+          "supplierWebsite": {
+            "type": "string"
+          },
+          "supplierRemark": {
+            "type": "string"
+          },
+          "supplierGuid": {
+            "type": "string"
+          },
+          "isDeleted": {
+            "type": "boolean"
+          },
+          "lastModified": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "isModified": {
+            "type": "boolean"
+          },
+          "supplierSearchCode": {
+            "type": "string"
+          },
+          "supplierAssortmentCode": {
+            "type": "string"
+          },
+          "supplierCountryCode": {
+            "type": "string"
+          },
+          "supplierCountry": {
+            "type": "string"
+          },
+          "supplierVatNumber": {
+            "type": "string"
+          },
+          "supplierBankAccount": {
+            "type": "string"
+          },
+          "supplierBankName": {
+            "type": "string"
+          },
+          "supplierBankBic": {
+            "type": "string"
+          },
+          "supplierBankIban": {
+            "type": "string"
+          },
+          "supplierBankSwift": {
+            "type": "string"
+          },
+          "supplierBankAccountName": {
+            "type": "string"
+          },
+          "supplierBankAccountNumber": {
+            "type": "string"
+          },
+          "supplierBankAccountType": {
+            "type": "string"
+          },
+          "supplierBankAccountCurrency": {
+            "type": "string"
+          },
+          "supplierBankAccountDescription": {
+            "type": "string"
+          },
+          "supplierBankAccountRemark": {
+            "type": "string"
+          },
+          "supplierBankAccountGuid": {
+            "type": "string"
+          },
+          "supplierBankAccountIsDeleted": {
+            "type": "boolean"
+          },
+          "supplierBankAccountLastModified": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "supplierBankAccountIsModified": {
+            "type": "boolean"
+          },
+          "supplierBankAccountSearchCode": {
+            "type": "string"
+          },
+          "supplierBankAccountAssortmentCode": {
+            "type": "string"
+          },
+          "supplierBankAccountCountryCode": {
+            "type": "string"
+          },
+          "supplierBankAccountCountry": {
+            "type": "string"
+          },
+          "supplierBankAccountVatNumber": {
+            "type": "string"
+          },
+          "deliveryDays": {
+            "type": "integer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "supplierId"
+        ]
+      },
+      "stream": "suppliers",
+      "metadata": [
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierId"
+          ],
+          "metadata": {
+            "inclusion": "automatic"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "officeId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierName"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierType"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierDescription"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierSubdescription"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierExtraInfo"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierEmail"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierPhone"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierFax"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierWebsite"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierRemark"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierGuid"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "isDeleted"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "lastModified"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "isModified"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierSearchCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierAssortmentCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierCountryCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierCountry"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierVatNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccount"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankName"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankBic"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankIban"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankSwift"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountName"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountType"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountCurrency"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountDescription"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountRemark"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountGuid"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountIsDeleted"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountLastModified"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountIsModified"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountSearchCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountAssortmentCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountCountryCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountCountry"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "supplierBankAccountVatNumber"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "deliveryDays"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [],
+          "metadata": {
+            "inclusion": "available",
+            "selected": true,
+            "selected-by-default": true,
+            "table-key-properties": [
+              "supplierId"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
