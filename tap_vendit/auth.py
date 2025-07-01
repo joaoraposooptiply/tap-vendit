@@ -187,7 +187,7 @@ class VenditAuthenticator(APIAuthenticatorBase):
         
         return {
             "Token": self._tap._config.get("token"),
-            "ApiKey": self._tap._config.get("api_key"),
+            "ApiKey": self._tap._config.get("vendit_api_key"),
             "Content-Type": "application/json"
         }
 
@@ -224,7 +224,7 @@ class VenditAuthenticator(APIAuthenticatorBase):
             Dictionary containing the required OAuth parameters.
         """
         return {
-            "apiKey": self._tap._config.get("api_key"),
+            "apiKey": self._tap._config.get("vendit_api_key"),
             "username": self._tap._config.get("username"),
             "password": self._tap._config.get("password"),
         }
@@ -248,7 +248,7 @@ class VenditAuthenticator(APIAuthenticatorBase):
         # Build the URL with credentials as query parameters
         url = (
             f"{self._auth_endpoint}?"
-            f"apiKey={self._tap._config.get('api_key')}"
+            f"apiKey={self._tap._config.get('vendit_api_key')}"
             f"&username={self._tap._config.get('username')}"
             f"&password={self._tap._config.get('password')}"
         )

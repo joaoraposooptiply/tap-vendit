@@ -37,7 +37,7 @@ pipx install tap-vendit
 
 ```json
 {
-  "api_key": "your_api_key",
+  "vendit_api_key": "your_api_key",
   "username": "your_username",
   "password": "your_password",
   "api_url": "https://api.staging.vendit.online",
@@ -46,7 +46,7 @@ pipx install tap-vendit
 }
 ```
 
-The `api_key`, `username`, and `password` are your Vendit API credentials. These are used to authenticate with the Vendit API and obtain an access token.
+The `vendit_api_key`, `username`, and `password` are your Vendit API credentials. These are used to authenticate with the Vendit API and obtain an access token.
 
 The `api_url` is the base URL for the Vendit API. The default is set to the staging environment.
 
