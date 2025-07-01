@@ -44,9 +44,11 @@ class TapVendit(Tap):
         state=None,
         parse_env_config=False,
         validate_config=True,
+        **kwargs,
     ) -> None:
-        self.config_file = config[0]
-        super().__init__(config, catalog, state, parse_env_config, validate_config)
+        if config:
+            self.config_file = config[0]
+        super().__init__(config=config, catalog=catalog, state=state, parse_env_config=parse_env_config, validate_config=validate_config, **kwargs)
 
     # Only non-sensitive config remains in config_jsonschema
     config_jsonschema = th.PropertiesList(
