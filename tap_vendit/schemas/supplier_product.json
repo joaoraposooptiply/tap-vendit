@@ -3,19 +3,19 @@
   "type": "object",
   "properties": {
     "productSupplierId": {"type": "integer"},
-    "productId": {"type": "integer"},
-    "supplierId": {"type": "integer"},
-    "supplierProductNumber": {"type": "string"},
-    "minOrderQuantity": {"type": "number"},
-    "preferredDefaultSupplier": {"type": "boolean"},
-    "recommendedSalesPriceInc": {"type": "number"},
-    "expectedArrivalDatetime": {"type": "string", "format": "date-time"},
-    "availabilityStatusId": {"type": "integer"},
-    "supplierStock2": {"type": "string"},
-    "lastModified": {"type": "string", "format": "date-time"},
-    "productPurchasePriceId": {"type": "integer"},
-    "purchasePriceEx": {"type": "number"},
-    "unix_timestamp": {"type": "integer"}
+    "productId": {"type": ["integer", "null"]},
+    "supplierId": {"type": ["integer", "null"]},
+    "supplierProductNumber": {"type": ["string", "null"]},
+    "minOrderQuantity": {"type": ["number", "null"]},
+    "preferredDefaultSupplier": {"type": ["boolean", "null"]},
+    "recommendedSalesPriceInc": {"type": ["number", "null"]},
+    "expectedArrivalDatetime": {"type": ["string", "null"], "format": "date-time"},
+    "availabilityStatusId": {"type": ["integer", "null"]},
+    "supplierStock2": {"type": ["string", "null"]},
+    "lastModified": {"type": ["string", "null"], "format": "date-time"},
+    "productPurchasePriceId": {"type": ["integer", "null"]},
+    "purchasePriceEx": {"type": ["number", "null"]},
+    "unix_timestamp": {"type": ["integer", "null"]}
   },
   "required": ["productSupplierId"]
 } 

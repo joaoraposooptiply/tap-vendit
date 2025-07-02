@@ -3,15 +3,15 @@
   "type": "object",
   "properties": {
     "productPurchaseOrderId": {"type": "integer"},
-    "officeId": {"type": "integer"},
-    "purchaseOrderNumber": {"type": "string"},
-    "supplierId": {"type": "integer"},
-    "orderDatetime": {"type": "string", "format": "date-time"},
-    "orderReference": {"type": "string"},
-    "preorderEmployeeId": {"type": "integer"},
-    "employeeId": {"type": "integer"},
-    "onlineOrderReference": {"type": "string"},
-    "orderRemark": {"type": "string"},
+    "officeId": {"type": ["integer", "null"]},
+    "purchaseOrderNumber": {"type": ["string", "null"]},
+    "supplierId": {"type": ["integer", "null"]},
+    "orderDatetime": {"type": ["string", "null"], "format": "date-time"},
+    "orderReference": {"type": ["string", "null"]},
+    "preorderEmployeeId": {"type": ["integer", "null"]},
+    "employeeId": {"type": ["integer", "null"]},
+    "onlineOrderReference": {"type": ["string", "null"]},
+    "orderRemark": {"type": ["string", "null"]},
     "details": {
       "type": "object",
       "properties": {
@@ -20,7 +20,7 @@
           "items": {
             "type": "object",
             "properties": {
-              "fieldName": {"type": "string"},
+              "fieldName": {"type": ["string", "null"]},
               "lookupValues": {
                 "type": "object",
                 "properties": {
@@ -30,8 +30,8 @@
                   }
                 }
               },
-              "lookupType": {"type": "string"},
-              "pkType": {"type": "string"}
+              "lookupType": {"type": ["string", "null"]},
+              "pkType": {"type": ["string", "null"]}
             }
           }
         },
@@ -41,7 +41,7 @@
         }
       }
     },
-    "unix_timestamp": {"type": "integer"}
+    "unix_timestamp": {"type": ["integer", "null"]}
   },
   "required": ["productPurchaseOrderId"]
 } 
