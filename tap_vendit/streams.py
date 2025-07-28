@@ -576,3 +576,13 @@ class OrdersOptiplyStream(BaseOptiplyStream):
 
     def get_url(self, unix_ms: int) -> str:
         return f"{self.config['api_url']}{self.path}/{unix_ms}/true"
+
+
+class StockChangesStream(BaseOptiplyStream):
+    """Stream for stock changes using Optiply endpoint."""
+    name = "stock_changes"
+    primary_keys = ["productStockId"]
+    schema = load_schema("stock_changes.json")
+
+    def get_url(self, unix_ms: int) -> str:
+        return f"{self.config['api_url']}/ProductStock/GetChangedStockFromDate/{unix_ms}"
