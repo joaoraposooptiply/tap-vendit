@@ -112,8 +112,6 @@ class DynamicSchemaStream(VenditStream):
             if sample_data:
                 schema = generate_schema_from_sample(sample_data)
                 # Add required fields (primary keys)
-                if hasattr(self, 'primary_keys') and self.primary_keys:
-                    schema["required"] = self.primary_keys
                 return schema
         except Exception as e:
             self.logger.warning(f"Failed to generate dynamic schema: {e}")
@@ -121,9 +119,8 @@ class DynamicSchemaStream(VenditStream):
         # Fallback to basic schema
         return {
             "$schema": "http://json-schema.org/draft-07/schema#",
-            "type": "object",
+"required": [],
             "properties": {},
-            "required": getattr(self, 'primary_keys', [])
         }
     
     def _get_sample_data(self) -> Optional[Dict[str, Any]]:
