@@ -102,22 +102,19 @@ The tap now uses **dynamic schema discovery**, which means:
 - **Automatic field detection** - new API fields are included automatically
 - **Zero maintenance** - no need to update schema files when the API changes
 
-#### Generate Catalog Automatically
+### CSV Output
+
+To generate CSV files for each stream:
 
 ```bash
-# Generate catalog using dynamic discovery
-python generate_catalog.py --config config.json --output catalog-dynamic.json
+# Generate CSV files for all streams
+python tap_to_csv.py config.json
 
-# Or use the tap directly
-tap-vendit --config config.json --discover > catalog-dynamic.json
+# Specify custom output directory
+python tap_to_csv.py config.json ./my_csv_files
 ```
 
-#### Compare with Previous Schema
-
-```bash
-# Compare with archived static catalog
-python generate_catalog.py --config config.json --compare archive/catalog.json
-```
+This will create individual CSV files for each stream in the output directory.
 
 ## Developer Resources
 
