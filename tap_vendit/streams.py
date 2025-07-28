@@ -120,7 +120,7 @@ class DynamicSchemaStream(VenditStream):
         return {
             "$schema": "http://json-schema.org/draft-07/schema#",
 "required": [],
-            "properties": {self.replication_key: {"type": ["string", "null"], "format": "date-time"}} if hasattr(self, "replication_key") and self.replication_key else {},
+            "properties": {self.replication_key: {"type": ["string", "null"], "format": "date-time"}} if hasattr(self, "replication_key") and self.replication_key and self.replication_key != "unix_timestamp" else {"unix_timestamp": {"type": ["integer", "null"]}} if hasattr(self, "replication_key") and self.replication_key == "unix_timestamp" else {},
         }
     
     def _get_sample_data(self) -> Optional[Dict[str, Any]]:
@@ -233,6 +233,8 @@ class BaseOptiplyStream(BaseStream):
         """Get records using unix timestamp incremental sync."""
         state = context or {}
         last_synced_unix = state.get("replication_key_value")
+        if isinstance(last_synced_unix, str):
+            last_synced_unix = int(last_synced_unix)
         
         if last_synced_unix is None:
             last_synced_unix = self.get_starting_unix()
@@ -265,7 +267,7 @@ class BaseOptiplyStream(BaseStream):
         
         # Update state for next run
         if context is not None:
-            context["replication_key_value"] = current_unix
+            context["replication_key_value"] = str(current_unix)
 
     def get_url(self, unix_ms: int) -> str:
         """Get URL for the Optiply endpoint. Override in subclasses."""
@@ -722,6 +724,8 @@ class DynamicSupplierProductsStream(DynamicSchemaStream, BaseOptiplyStream):
         """Override to handle the flattened productPurchasePrice."""
         state = context or {}
         last_synced_unix = state.get("replication_key_value")
+        if isinstance(last_synced_unix, str):
+            last_synced_unix = int(last_synced_unix)
         
         if last_synced_unix is None:
             last_synced_unix = self.get_starting_unix()
@@ -757,7 +761,7 @@ class DynamicSupplierProductsStream(DynamicSchemaStream, BaseOptiplyStream):
         
         # Update state for next run
         if context is not None:
-            context["replication_key_value"] = current_unix
+            context["replication_key_value"] = str(current_unix)
 
 class DynamicPurchaseOrdersOptiplyStream(DynamicSchemaStream, BaseOptiplyStream):
     """Stream for purchase orders using Optiply endpoint with dynamic schema generation."""
@@ -788,6 +792,45 @@ class DynamicPurchaseOrdersOptiplyStream(DynamicSchemaStream, BaseOptiplyStream)
             self.logger.warning(f"Failed to get sample data for schema generation: {e}")
         
         return None
+    def get_records(self, context: dict | None) -> Iterable[dict]:
+        """Get records using unix timestamp incremental sync."""
+        state = context or {}
+        last_synced_unix = state.get("replication_key_value")
+        if isinstance(last_synced_unix, str):
+            last_synced_unix = int(last_synced_unix)
+        
+        if last_synced_unix is None:
+            last_synced_unix = self.get_starting_unix()
+            self.logger.info(f"First run: using default start unix {last_synced_unix}")
+        else:
+            self.logger.info(f"Incremental run: using saved unix {last_synced_unix}")
+        
+        url = self.get_url(last_synced_unix)
+        self.logger.info(f"Fetching purchase orders from {url}")
+        
+        response = self.session.get(url, headers=self.authenticator.auth_headers)
+        if response.status_code != 200:
+            self.logger.error(f"Error fetching purchase orders: {response.status_code}")
+            self.logger.error(response.text)
+            return
+        
+        data = self._parse_json_response(response, "fetching purchase orders optiply")
+        items = data.get("items", [])
+        self.logger.info(f"Retrieved {len(items)} purchase orders")
+        
+        for item in items:
+            record = dict(item)
+            record["unix_timestamp"] = last_synced_unix
+            yield record
+        
+        # Save current unix timestamp for next run
+        current_unix = self.get_current_unix()
+        self.logger.info(f"Current unix timestamp for next run: {current_unix}")
+        
+        # Update state for next run
+        if context is not None:
+            context["replication_key_value"] = str(current_unix)
+
 
 class DynamicOrdersOptiplyStream(DynamicSchemaStream, BaseOptiplyStream):
     """Stream for orders using Optiply endpoint with dynamic schema generation."""
@@ -818,3 +861,42 @@ class DynamicOrdersOptiplyStream(DynamicSchemaStream, BaseOptiplyStream):
             self.logger.warning(f"Failed to get sample data for schema generation: {e}")
         
         return None
+    def get_records(self, context: dict | None) -> Iterable[dict]:
+        """Get records using unix timestamp incremental sync."""
+        state = context or {}
+        last_synced_unix = state.get("replication_key_value")
+        if isinstance(last_synced_unix, str):
+            last_synced_unix = int(last_synced_unix)
+        
+        if last_synced_unix is None:
+            last_synced_unix = self.get_starting_unix()
+            self.logger.info(f"First run: using default start unix {last_synced_unix}")
+        else:
+            self.logger.info(f"Incremental run: using saved unix {last_synced_unix}")
+        
+        url = self.get_url(last_synced_unix)
+        self.logger.info(f"Fetching orders from {url}")
+        
+        response = self.session.get(url, headers=self.authenticator.auth_headers)
+        if response.status_code != 200:
+            self.logger.error(f"Error fetching orders: {response.status_code}")
+            self.logger.error(response.text)
+            return
+        
+        data = self._parse_json_response(response, "fetching orders optiply")
+        items = data.get("items", [])
+        self.logger.info(f"Retrieved {len(items)} orders")
+        
+        for item in items:
+            record = dict(item)
+            record["unix_timestamp"] = last_synced_unix
+            yield record
+        
+        # Save current unix timestamp for next run
+        current_unix = self.get_current_unix()
+        self.logger.info(f"Current unix timestamp for next run: {current_unix}")
+        
+        # Update state for next run
+        if context is not None:
+            context["replication_key_value"] = str(current_unix)
+
