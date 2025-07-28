@@ -16,6 +16,8 @@
     "salesVisibilityId": {"type": ["integer", "null"]},
     "availabilityStatusId": {"type": ["integer", "null"]},
     "creationDatetime": {"type": ["string", "null"], "format": "date-time"},
+    "productLabelLayoutId": {"type": ["integer", "null"]},
+    "cabProfileCode": {"type": ["integer", "null"]},
     "allowInvoiceDiscount": {"type": ["boolean", "null"]},
     "lastModified": {"type": ["string", "null"], "format": "date-time"},
     "isModified": {"type": ["boolean", "null"]},
@@ -31,6 +33,8 @@
     "salesUnitQuantity": {"type": ["number", "null"]},
     "hintInfo": {"type": ["string", "null"]},
     "productSearchCode": {"type": ["string", "null"]},
+    "productLabelPricetagLayoutId": {"type": ["integer", "null"]},
+    "productLabelPricetagActionPriceLayoutId": {"type": ["integer", "null"]},
     "isBaseProduct": {"type": ["boolean", "null"]},
     "deliveryFromWarehouse": {"type": ["integer", "null"]},
     "purchaseFromWarehouse": {"type": ["integer", "null"]},
@@ -42,7 +46,86 @@
     "modifiedBy": {"type": ["string", "null"]},
     "createdBy": {"type": ["string", "null"]},
     "originCountryCode": {"type": ["string", "null"]},
-    "originCountry": {"type": ["string", "null"]}
+    "originCountry": {"type": ["string", "null"]},
+    "suppliers": {
+      "type": ["object", "null"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productSupplierId": {"type": ["integer", "null"]},
+              "productId": {"type": ["integer", "null"]},
+              "supplierId": {"type": ["integer", "null"]},
+              "supplierProductNumber": {"type": ["string", "null"]},
+              "preferredDefaultSupplier": {"type": ["boolean", "null"]},
+              "recommendedSalesPriceInc": {"type": ["number", "null"]},
+              "availabilityStatusId": {"type": ["integer", "null"]},
+              "supplierStock2": {"type": ["string", "null"]},
+              "lastModified": {"type": ["string", "null"], "format": "date-time"}
+            }
+          }
+        }
+      }
+    },
+    "salesPrices": {
+      "type": ["object", "null"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productSalesPriceId": {"type": ["integer", "null"]},
+              "productId": {"type": ["integer", "null"]},
+              "salesPriceEx": {"type": ["number", "null"]},
+              "recommendedSalesPriceEx": {"type": ["number", "null"]}
+            }
+          }
+        }
+      }
+    },
+    "productVats": {
+      "type": ["object", "null"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productVatId": {"type": ["integer", "null"]},
+              "productId": {"type": ["integer", "null"]},
+              "vatId": {"type": ["integer", "null"]}
+            }
+          }
+        }
+      }
+    },
+    "availableStock": {
+      "type": ["object", "null"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "officeId": {"type": ["integer", "null"]},
+              "productId": {"type": ["integer", "null"]},
+              "sizeColorId": {"type": ["integer", "null"]},
+              "availableStock": {"type": ["number", "null"]},
+              "pendingProductPurchase": {"type": ["number", "null"]},
+              "officeTransferOrder": {"type": ["number", "null"]},
+              "officeTransferOrderIn": {"type": ["number", "null"]},
+              "reserved": {"type": ["number", "null"]},
+              "infoTotalCustomerOrdered": {"type": ["number", "null"]},
+              "infoTotalPurchaseOrdered": {"type": ["number", "null"]},
+              "productStock": {"type": ["number", "null"]}
+            }
+          }
+        }
+      }
+    }
   },
   "required": ["productId"]
 } 

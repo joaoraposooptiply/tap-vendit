@@ -1450,6 +1450,152 @@
           },
           "originCountry": {
             "type": "string"
+          },
+          "productLabelLayoutId": {
+            "type": "integer"
+          },
+          "cabProfileCode": {
+            "type": "integer"
+          },
+          "productLabelPricetagLayoutId": {
+            "type": "integer"
+          },
+          "productLabelPricetagActionPriceLayoutId": {
+            "type": "integer"
+          },
+          "suppliers": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "productSupplierId": {
+                      "type": "integer"
+                    },
+                    "productId": {
+                      "type": "integer"
+                    },
+                    "supplierId": {
+                      "type": "integer"
+                    },
+                    "supplierProductNumber": {
+                      "type": "string"
+                    },
+                    "preferredDefaultSupplier": {
+                      "type": "boolean"
+                    },
+                    "recommendedSalesPriceInc": {
+                      "type": "number"
+                    },
+                    "availabilityStatusId": {
+                      "type": "integer"
+                    },
+                    "supplierStock2": {
+                      "type": "string"
+                    },
+                    "lastModified": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "salesPrices": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "productSalesPriceId": {
+                      "type": "integer"
+                    },
+                    "productId": {
+                      "type": "integer"
+                    },
+                    "salesPriceEx": {
+                      "type": "number"
+                    },
+                    "recommendedSalesPriceEx": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "productVats": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "productVatId": {
+                      "type": "integer"
+                    },
+                    "productId": {
+                      "type": "integer"
+                    },
+                    "vatId": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "availableStock": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "officeId": {
+                      "type": "integer"
+                    },
+                    "productId": {
+                      "type": "integer"
+                    },
+                    "sizeColorId": {
+                      "type": "integer"
+                    },
+                    "availableStock": {
+                      "type": "number"
+                    },
+                    "pendingProductPurchase": {
+                      "type": "number"
+                    },
+                    "officeTransferOrder": {
+                      "type": "number"
+                    },
+                    "officeTransferOrderIn": {
+                      "type": "number"
+                    },
+                    "reserved": {
+                      "type": "number"
+                    },
+                    "infoTotalCustomerOrdered": {
+                      "type": "number"
+                    },
+                    "infoTotalPurchaseOrdered": {
+                      "type": "number"
+                    },
+                    "productStock": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "type": "object",
@@ -1823,6 +1969,78 @@
           "breadcrumb": [
             "properties",
             "originCountry"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productLabelLayoutId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "cabProfileCode"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productLabelPricetagLayoutId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productLabelPricetagActionPriceLayoutId"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "suppliers"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "salesPrices"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "productVats"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "availableStock"
           ],
           "metadata": {
             "inclusion": "available"
