@@ -93,6 +93,12 @@ class DynamicSchemaStream(VenditStream):
     @property
     def schema(self) -> Dict[str, Any]:
         """Generate schema dynamically from API response."""
+        # Ensure attributes are initialized
+        if not hasattr(self, "_schema_generated"):
+            self._schema_generated = False
+        if not hasattr(self, "_schema"):
+            self._schema = None
+        
         if not self._schema_generated:
             self._schema = self._generate_schema()
             self._schema_generated = True
