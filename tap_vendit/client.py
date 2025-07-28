@@ -11,7 +11,6 @@ import time
 
 import requests
 from singer_sdk.helpers.jsonpath import extract_jsonpath
-from singer_sdk.pagination import BaseAPIPaginator
 from singer_sdk.streams import RESTStream
 
 from tap_vendit.auth import VenditAuthenticator

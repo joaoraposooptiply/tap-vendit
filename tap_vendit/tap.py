@@ -13,23 +13,34 @@ from singer_sdk.helpers._compat import final
 
 # TODO: Import your custom stream types here:
 from tap_vendit.streams import (
-    ProductsStream,
-    SuppliersStream,
-    OrdersStream,
-    PurchaseOrdersStream,
-    PurchaseOrdersOptiplyStream,
-    SupplierProductsStream,
-    OrdersOptiplyStream,
+    # Static schema streams (commented out)
+    # ProductsStream,
+    # SuppliersStream,
+    # OrdersStream,
+    # PurchaseOrdersStream,
+    # PurchaseOrdersOptiplyStream,
+    # SupplierProductsStream,
+    # OrdersOptiplyStream,
+    
+    # Dynamic schema streams (recommended)
+    DynamicProductsStream,
+    DynamicSuppliersStream,
+    DynamicOrdersStream,
+    DynamicPurchaseOrdersStream,
+    DynamicPurchaseOrdersOptiplyStream,
+    DynamicSupplierProductsStream,
+    DynamicOrdersOptiplyStream,
 )
 
 STREAM_TYPES = [
-    ProductsStream,
-    SuppliersStream,
-    OrdersStream,
-    PurchaseOrdersStream,
-    PurchaseOrdersOptiplyStream,
-    SupplierProductsStream,
-    OrdersOptiplyStream,
+    # Use dynamic schema generation for all streams
+    DynamicProductsStream,
+    DynamicSuppliersStream,
+    DynamicOrdersStream,
+    DynamicPurchaseOrdersStream,
+    DynamicPurchaseOrdersOptiplyStream,
+    DynamicSupplierProductsStream,
+    DynamicOrdersOptiplyStream,
 ]
 
 class TapVendit(Tap):

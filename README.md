@@ -7,6 +7,7 @@ Built with the [Meltano Tap SDK](https://sdk.meltano.com) for Singer Taps.
 ## Features
 
 - **Multiple Data Streams**: Products, suppliers, orders, purchase orders, supplier products, and Optiply-specific streams
+- **Dynamic Schema Discovery**: Automatic schema generation from API responses - no manual maintenance required
 - **Robust Authentication**: Token-based authentication with automatic refresh and persistence
 - **Incremental Sync**: Support for both timestamp-based and ID-based incremental synchronization
 - **Comprehensive Testing**: Built-in testing utilities for all streams with CSV and JSON output
@@ -15,11 +16,11 @@ Built with the [Meltano Tap SDK](https://sdk.meltano.com) for Singer Taps.
 ## Available Streams
 
 ### Core Streams
-- **Products**: Product catalog and inventory information
-- **Suppliers**: Supplier details and contact information
-- **Orders**: Customer order data with line items
-- **Purchase Orders**: Purchase order management data
-- **Supplier Products**: Product-supplier relationships and pricing
+- **Products**: Product catalog and inventory information with automatic field detection
+- **Suppliers**: Supplier details and contact information with automatic field detection
+- **Orders**: Customer order data with line items and automatic field detection
+- **Purchase Orders**: Purchase order management data with automatic field detection
+- **Supplier Products**: Product-supplier relationships and pricing with automatic field detection
 
 ### Optiply Streams (Advanced Analytics)
 - **OrdersOptiply**: Enhanced order data with nested details using unix timestamp incremental sync
@@ -92,6 +93,32 @@ tap-vendit --version
 tap-vendit --help
 tap-vendit --config CONFIG --discover > ./catalog.json
 ```
+
+### Dynamic Schema Discovery
+
+The tap now uses **dynamic schema discovery**, which means:
+
+- **No manual catalog files required** - schemas are generated automatically
+- **Automatic field detection** - new API fields are included automatically
+- **Zero maintenance** - no need to update schema files when the API changes
+
+#### Generate Catalog Automatically
+
+```bash
+# Generate catalog using dynamic discovery
+python generate_catalog.py --config config.json --output catalog-dynamic.json
+
+# Or use the tap directly
+tap-vendit --config config.json --discover > catalog-dynamic.json
+```
+
+#### Compare with Previous Schema
+
+```bash
+# Compare with archived static catalog
+python generate_catalog.py --config config.json --compare archive/catalog.json
+```
+
 ## Developer Resources
 
 ### Initialize your Development Environment
@@ -113,6 +140,14 @@ You can also test the `tap-vendit` CLI interface directly using `poetry run`:
 
 ```bash
 poetry run tap-vendit --help
+```
+
+### Testing Dynamic Schema Generation
+
+Test that all dynamic streams are working correctly:
+
+```bash
+python test_dynamic_streams.py
 ```
 
 ### Testing with [Meltano](https://www.meltano.com)
@@ -152,29 +187,30 @@ develop your own taps and targets.
 ### Core Streams
 
 #### ProductsStream
-- **Endpoint**: `/Products/GetAll`
-- **Sync Type**: Full table
-- **Description**: Retrieves all products with their basic information
+- **Endpoint**: `/Products/GetMultiple`
+- **Sync Type**: Incremental (lastModified)
+- **Description**: Retrieves all products with automatic field detection
+- **Dynamic Features**: Automatically detects nested objects like `suppliers`, `salesPrices`, `availableStock`
 
 #### SuppliersStream
-- **Endpoint**: `/Suppliers/GetAll`
+- **Endpoint**: `/Suppliers/GetMultiple`
 - **Sync Type**: Full table
-- **Description**: Retrieves all suppliers with their contact information
+- **Description**: Retrieves all suppliers with automatic field detection
 
 #### OrdersStream
-- **Endpoint**: `/Orders/GetAll`
+- **Endpoint**: `/Orders/GetWithDetails`
 - **Sync Type**: Incremental (ID-based)
-- **Description**: Retrieves orders with incremental sync using order IDs
+- **Description**: Retrieves orders with incremental sync using order IDs and automatic field detection
 
 #### PurchaseOrdersStream
-- **Endpoint**: `/PurchaseOrders/GetAll`
+- **Endpoint**: `/PurchaseOrders/GetWithDetails`
 - **Sync Type**: Incremental (ID-based)
-- **Description**: Retrieves purchase orders with incremental sync using purchase order IDs
+- **Description**: Retrieves purchase orders with incremental sync using purchase order IDs and automatic field detection
 
 #### SupplierProductsStream
-- **Endpoint**: `/SupplierProducts/GetAll`
-- **Sync Type**: Full table
-- **Description**: Retrieves supplier-product relationships and pricing information
+- **Endpoint**: `/Optiply/GetProductSuppliersFromDate`
+- **Sync Type**: Incremental (Unix timestamp-based)
+- **Description**: Retrieves supplier-product relationships and pricing information with automatic field detection
 
 ### Optiply Streams
 
@@ -182,10 +218,21 @@ develop your own taps and targets.
 - **Endpoint**: `/Optiply/GetOrdersFromDate/{unix}/true`
 - **Sync Type**: Incremental (Unix timestamp-based)
 - **Description**: Retrieves enhanced order data with nested details using unix timestamp incremental sync
-- **Schema**: `order_optiply.json` - Includes nested order details and line items
+- **Dynamic Features**: Automatically detects all order fields and nested structures
 
 #### PurchaseOrdersOptiplyStream
-- **Endpoint**: `/Optiply/GetPurchaseOrdersFromDate/{unix}/true`
+- **Endpoint**: `/Optiply/GetPurchaseOrdersFromDate/{unix}`
 - **Sync Type**: Incremental (Unix timestamp-based)
 - **Description**: Retrieves enhanced purchase order data with nested details using unix timestamp incremental sync
-- **Schema**: `purchase_order_optiply.json` - Includes nested purchase order details and line items
+- **Dynamic Features**: Automatically detects all purchase order fields and nested structures
+
+## Migration from Static Schemas
+
+If you were previously using static schema files:
+
+1. **Static files have been archived** in the `archive/` directory
+2. **Dynamic discovery is now the default** - no configuration changes needed
+3. **Catalogs can be regenerated** anytime using the provided scripts
+4. **Backward compatibility** is maintained - you can still use static schemas if needed
+
+For more details, see [DYNAMIC_SCHEMAS.md](DYNAMIC_SCHEMAS.md).

@@ -1,0 +1,7 @@
+{
+  "vendit_api_key": "your_api_key_here",
+  "username": "your_username_here",
+  "password": "your_password_here",
+  "api_url": "https://api.staging.vendit.online",
+  "start_date": "2024-01-01T00:00:00Z"
+}

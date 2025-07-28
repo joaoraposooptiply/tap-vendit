@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional, Iterable, TYPE_CHECKING
 import time
 import os
 import requests
+import json
 
 from singer_sdk import typing as th  # JSON Schema typing helpers
 from singer_sdk.helpers._util import read_json_file
@@ -38,6 +39,93 @@ FILTER_COMPARISONS = {
 # Common pagination settings
 DEFAULT_PAGE_SIZE = 100
 DEFAULT_BATCH_SIZE = 100
+
+def infer_schema_type(value) -> Dict[str, Any]:
+    """Infer JSON schema type from a Python value."""
+    if value is None:
+        return {"type": ["null", "string"]}
+    elif isinstance(value, bool):
+        return {"type": ["boolean", "null"]}
+    elif isinstance(value, int):
+        return {"type": ["integer", "null"]}
+    elif isinstance(value, float):
+        return {"type": ["number", "null"]}
+    elif isinstance(value, str):
+        # Try to detect date-time format
+        if len(value) > 10 and "T" in value and ("-" in value or ":" in value):
+            return {"type": ["string", "null"], "format": "date-time"}
+        return {"type": ["string", "null"]}
+    elif isinstance(value, list):
+        if value:
+            # Infer type from first item
+            item_type = infer_schema_type(value[0])
+            return {"type": ["array", "null"], "items": item_type}
+        else:
+            return {"type": ["array", "null"], "items": {"type": "string"}}
+    elif isinstance(value, dict):
+        properties = {}
+        for k, v in value.items():
+            properties[k] = infer_schema_type(v)
+        return {"type": ["object", "null"], "properties": properties}
+    else:
+        return {"type": ["string", "null"]}
+
+def generate_schema_from_sample(sample_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate JSON schema from sample data."""
+    properties = {}
+    
+    for key, value in sample_data.items():
+        properties[key] = infer_schema_type(value)
+    
+    return {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": properties
+    }
+
+class DynamicSchemaStream(VenditStream):
+    """Base stream class that automatically generates schemas from API responses."""
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._schema = None
+        self._schema_generated = False
+    
+    @property
+    def schema(self) -> Dict[str, Any]:
+        """Generate schema dynamically from API response."""
+        if not self._schema_generated:
+            self._schema = self._generate_schema()
+            self._schema_generated = True
+        return self._schema
+    
+    def _generate_schema(self) -> Dict[str, Any]:
+        """Generate schema by fetching sample data from the API."""
+        try:
+            # Get a small sample of data to infer schema
+            sample_data = self._get_sample_data()
+            if sample_data:
+                schema = generate_schema_from_sample(sample_data)
+                # Add required fields (primary keys)
+                if hasattr(self, 'primary_keys') and self.primary_keys:
+                    schema["required"] = self.primary_keys
+                return schema
+        except Exception as e:
+            self.logger.warning(f"Failed to generate dynamic schema: {e}")
+        
+        # Fallback to basic schema
+        return {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {},
+            "required": getattr(self, 'primary_keys', [])
+        }
+    
+    def _get_sample_data(self) -> Optional[Dict[str, Any]]:
+        """Get sample data from the API to generate schema."""
+        # This should be implemented by subclasses
+        # Return a single record or None if not available
+        return None
 
 class BaseStream(VenditStream):
     """Base stream with DRY incremental and request logic."""
@@ -250,12 +338,108 @@ class BaseFindGetWithDetailsStream(BaseFindStream):
             if data:
                 yield data
 
-# Schema loading helper
+# Schema loading helper (kept for backward compatibility)
 def load_schema(filename: str) -> Dict[str, Any]:
-    """Load schema from JSON file."""
+    """Load schema from JSON file. Note: This is deprecated in favor of dynamic schema generation."""
     return read_json_file(os.path.join(SCHEMAS_DIR, filename))
 
 # Stream implementations
+class DynamicProductsStream(DynamicSchemaStream, BaseFindGetMultipleStream):
+    """Products stream with dynamic schema generation."""
+    name = "products"
+    primary_keys = ["productId"]
+    replication_key = "lastModified"
+    records_jsonpath = "$.items[*]"
+
+    @property
+    def path(self):
+        return "/VenditPublicApi/Products/GetMultiple"
+
+    def _get_sample_data(self) -> Optional[Dict[str, Any]]:
+        """Get sample data from the API to generate schema."""
+        try:
+            # Get a single product to infer schema
+            find_url = f"{self.config['api_url']}/VenditPublicApi/Products/Find"
+            payload = {
+                "fieldFilters": [],
+                "paginationOffset": 0,
+                "paginationLimit": 1,
+                "operator": 0
+            }
+            
+            response = self._request("POST", find_url, json=payload)
+            data = self._parse_json_response(response, "finding sample product IDs")
+            
+            product_ids = data.get("results", [])
+            if product_ids:
+                # Get the first product's details
+                url = f"{self.config['api_url']}{self.path}"
+                response = self._request("POST", url, json={"primaryKeys": [str(product_ids[0])]})
+                data = self._parse_json_response(response, "getting sample product")
+                items = data.get("items", [])
+                if items:
+                    return items[0]
+        except Exception as e:
+            self.logger.warning(f"Failed to get sample data for schema generation: {e}")
+        
+        return None
+
+    def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
+        """Override to use correct field ID for products."""
+        self.logger.info(f"Step 1: Finding {self.name} IDs...")
+        start_date = self.get_starting_time(context)
+        
+        # Use the correct Find endpoint for products
+        find_url = f"{self.config['api_url']}/VenditPublicApi/Products/Find"
+        all_ids = []
+        offset = 0
+        
+        while True:
+            payload = {
+                "fieldFilters": [
+                    {
+                        "field": FIELD_IDS["LAST_MODIFIED_ORDERS"],
+                        "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000"),
+                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"]
+                    }
+                ],
+                "paginationOffset": offset,
+                "operator": 0
+            }
+            
+            response = self._request("POST", find_url, json=payload)
+            data = self._parse_json_response(response, "finding product IDs")
+            
+            ids = data.get("results", [])
+            if not ids:
+                break
+                
+            all_ids.extend([str(i) for i in ids if i])
+            if len(ids) < DEFAULT_PAGE_SIZE:
+                break
+            offset += DEFAULT_PAGE_SIZE
+            
+        if not all_ids:
+            self.logger.warning(f"No {self.name} IDs found")
+            return
+            
+        self.logger.info(f"Found {len(all_ids)} {self.name} IDs")
+        self.logger.info("Step 2: Getting details...")
+        
+        # Get details in batches
+        for i in range(0, len(all_ids), DEFAULT_BATCH_SIZE):
+            batch = all_ids[i:i + DEFAULT_BATCH_SIZE]
+            url = f"{self.config['api_url']}{self.path}"
+            response = self._request("POST", url, json={"primaryKeys": batch})
+            
+            if response.status_code != 200:
+                self.logger.error(f"Error fetching {self.name} batch: {response.status_code}")
+                continue
+                
+            data = self._parse_json_response(response, f"fetching {self.name} batch")
+            for item in data.get("items", []):
+                yield item
+
 class ProductsStream(BaseFindGetMultipleStream):
     """Products stream using Find → GetMultiple pattern."""
     name = "products"
@@ -576,3 +760,387 @@ class OrdersOptiplyStream(BaseOptiplyStream):
 
     def get_url(self, unix_ms: int) -> str:
         return f"{self.config['api_url']}{self.path}/{unix_ms}/true"
+
+# Dynamic Schema Streams for all endpoints
+class DynamicSuppliersStream(DynamicSchemaStream, BaseFindGetMultipleStream):
+    """Suppliers stream with dynamic schema generation."""
+    name = "suppliers"
+    primary_keys = ["supplierId"]
+    replication_key = None
+    records_jsonpath = "$.items[*]"
+
+    @property
+    def path(self):
+        return "/VenditPublicApi/Suppliers/GetMultiple"
+
+    def _get_sample_data(self) -> Optional[Dict[str, Any]]:
+        """Get sample data from the API to generate schema."""
+        try:
+            # Get a single supplier to infer schema
+            get_all_ids_url = f"{self.config['api_url']}/VenditPublicApi/Suppliers/GetAllIds"
+            response = self._request("GET", get_all_ids_url)
+            data = self._parse_json_response(response, "getting sample supplier IDs")
+            
+            supplier_ids = [str(i) for i in data if i]
+            if supplier_ids:
+                # Get the first supplier's details
+                url = f"{self.config['api_url']}{self.path}"
+                response = self._request("POST", url, json={"primaryKeys": [supplier_ids[0]]})
+                data = self._parse_json_response(response, "getting sample supplier")
+                items = data.get("items", [])
+                if items:
+                    return items[0]
+        except Exception as e:
+            self.logger.warning(f"Failed to get sample data for schema generation: {e}")
+        
+        return None
+
+    def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
+        """Override to use GetAllIds instead of Find for suppliers."""
+        self.logger.info("Step 1: Getting all supplier IDs...")
+        
+        # Use GetAllIds endpoint instead of Find
+        get_all_ids_url = f"{self.config['api_url']}/VenditPublicApi/Suppliers/GetAllIds"
+        response = self._request("GET", get_all_ids_url)
+        data = self._parse_json_response(response, "getting supplier IDs")
+        
+        supplier_ids = [str(i) for i in data if i]
+        if not supplier_ids:
+            self.logger.warning("No supplier IDs found")
+            return
+            
+        self.logger.info(f"Found {len(supplier_ids)} supplier IDs")
+        self.logger.info("Step 2: Getting supplier details...")
+        
+        # Get details in batches
+        for i in range(0, len(supplier_ids), DEFAULT_BATCH_SIZE):
+            batch = supplier_ids[i:i + DEFAULT_BATCH_SIZE]
+            url = f"{self.config['api_url']}{self.path}"
+            response = self._request("POST", url, json={"primaryKeys": batch})
+            
+            if response.status_code != 200:
+                self.logger.error(f"Error fetching suppliers batch: {response.status_code}")
+                continue
+                
+            data = self._parse_json_response(response, "fetching suppliers batch")
+            for item in data.get("items", []):
+                yield item
+
+class DynamicOrdersStream(DynamicSchemaStream, BaseFindGetWithDetailsStream):
+    """Orders stream with dynamic schema generation."""
+    name = "orders"
+    primary_keys = ["customerOrderHeaderId"]
+    records_jsonpath = "$"
+
+    @property
+    def path(self):
+        return "/VenditPublicApi/Orders/GetWithDetails"
+
+    def _get_sample_data(self) -> Optional[Dict[str, Any]]:
+        """Get sample data from the API to generate schema."""
+        try:
+            # Get a single order to infer schema
+            find_url = f"{self.config['api_url']}/VenditPublicApi/Orders/Find"
+            payload = {
+                "fieldFilters": [],
+                "paginationOffset": 0,
+                "paginationLimit": 1,
+                "operator": 0
+            }
+            
+            response = self._request("POST", find_url, json=payload)
+            data = self._parse_json_response(response, "finding sample order IDs")
+            
+            order_ids = data.get("results", [])
+            if order_ids:
+                # Get the first order's details
+                url = f"{self.config['api_url']}{self.path}/{order_ids[0]}"
+                response = self._request("GET", url)
+                data = self._parse_json_response(response, "getting sample order")
+                if data:
+                    return data
+        except Exception as e:
+            self.logger.warning(f"Failed to get sample data for schema generation: {e}")
+        
+        return None
+
+    def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
+        """Override to use correct field ID for orders."""
+        self.logger.info(f"Step 1: Finding {self.name} IDs...")
+        start_date = self.get_starting_time(context)
+        
+        # Use the correct Find endpoint for orders
+        find_url = f"{self.config['api_url']}/VenditPublicApi/Orders/Find"
+        all_ids = []
+        offset = 0
+        
+        while True:
+            payload = {
+                "fieldFilters": [
+                    {
+                        "field": FIELD_IDS["LAST_MODIFIED_ORDERS"],
+                        "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000"),
+                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"]
+                    }
+                ],
+                "paginationOffset": offset,
+                "paginationLimit": DEFAULT_PAGE_SIZE,
+                "operator": 0
+            }
+            
+            response = self._request("POST", find_url, json=payload)
+            data = self._parse_json_response(response, "finding order IDs")
+            
+            ids = data.get("results", [])
+            if not ids:
+                break
+                
+            all_ids.extend([str(i) for i in ids if i])
+            if len(ids) < DEFAULT_PAGE_SIZE:
+                break
+            offset += DEFAULT_PAGE_SIZE
+            
+        if not all_ids:
+            self.logger.warning(f"No {self.name} IDs found")
+            return
+            
+        self.logger.info(f"Found {len(all_ids)} {self.name} IDs")
+        self.logger.info("Step 2: Getting details...")
+        
+        # Get individual details
+        for item_id in all_ids:
+            url = f"{self.config['api_url']}{self.path}/{item_id}"
+            response = self._request("GET", url)
+            
+            if response.status_code != 200:
+                self.logger.error(f"Error fetching {self.name} {item_id}: {response.status_code}")
+                continue
+                
+            data = self._parse_json_response(response, f"fetching {self.name} {item_id}")
+            if data:
+                yield data
+
+class DynamicPurchaseOrdersStream(DynamicSchemaStream, BaseFindGetWithDetailsStream):
+    """Purchase Orders stream with dynamic schema generation."""
+    name = "purchase_orders"
+    primary_keys = ["productPurchaseOrderId"]
+    replication_key = None
+    records_jsonpath = "$"
+
+    @property
+    def path(self):
+        return "/VenditPublicApi/PurchaseOrders/GetWithDetails"
+
+    def _get_sample_data(self) -> Optional[Dict[str, Any]]:
+        """Get sample data from the API to generate schema."""
+        try:
+            # Get a single purchase order to infer schema
+            find_url = f"{self.config['api_url']}/VenditPublicApi/PurchaseOrders/Find"
+            payload = {
+                "fieldFilters": [],
+                "paginationOffset": 0,
+                "paginationLimit": 1,
+                "operator": 0
+            }
+            
+            response = self._request("POST", find_url, json=payload)
+            data = self._parse_json_response(response, "finding sample purchase order IDs")
+            
+            po_ids = data.get("results", [])
+            if po_ids:
+                # Get the first purchase order's details
+                url = f"{self.config['api_url']}{self.path}/{po_ids[0]}"
+                response = self._request("GET", url)
+                data = self._parse_json_response(response, "getting sample purchase order")
+                if data:
+                    return data
+        except Exception as e:
+            self.logger.warning(f"Failed to get sample data for schema generation: {e}")
+        
+        return None
+
+    def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
+        """Override to use correct field ID for purchase orders."""
+        self.logger.info("Step 1: Finding purchase order IDs...")
+        start_date = self.get_starting_time(context)
+        
+        # Use the correct Find endpoint for purchase orders with orderDateTime field
+        find_url = f"{self.config['api_url']}/VenditPublicApi/PurchaseOrders/Find"
+        all_ids = []
+        offset = 0
+        
+        while True:
+            payload = {
+                "fieldFilters": [
+                    {
+                        "field": FIELD_IDS["ORDER_DATE_TIME"],
+                        "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000"),
+                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"]
+                    }
+                ],
+                "paginationOffset": offset,
+                "operator": 0
+            }
+            
+            response = self._request("POST", find_url, json=payload)
+            data = self._parse_json_response(response, "finding purchase order IDs")
+            
+            ids = data.get("results", [])
+            if not ids:
+                break
+                
+            all_ids.extend([str(i) for i in ids if i])
+            if len(ids) < DEFAULT_PAGE_SIZE:
+                break
+            offset += DEFAULT_PAGE_SIZE
+            
+        if not all_ids:
+            self.logger.warning("No purchase order IDs found")
+            return
+            
+        self.logger.info(f"Found {len(all_ids)} purchase order IDs")
+        self.logger.info("Step 2: Getting purchase order details...")
+        
+        # Get individual details
+        for po_id in all_ids:
+            url = f"{self.config['api_url']}{self.path}/{po_id}"
+            response = self._request("GET", url)
+            
+            if response.status_code != 200:
+                self.logger.error(f"Error fetching purchase order {po_id}: {response.status_code}")
+                continue
+                
+            data = self._parse_json_response(response, f"fetching purchase order {po_id}")
+            if data:
+                yield data
+
+class DynamicSupplierProductsStream(DynamicSchemaStream, BaseOptiplyStream):
+    """Stream for supplier-product relationships with dynamic schema generation."""
+    name = "supplier_products"
+    primary_keys = ["productSupplierId"]
+
+    def get_url(self, unix_ms: int) -> str:
+        return f"{self.config['api_url']}/Optiply/GetProductSuppliersFromDate/{unix_ms}"
+
+    def _get_sample_data(self) -> Optional[Dict[str, Any]]:
+        """Get sample data from the API to generate schema."""
+        try:
+            # Get a single supplier product to infer schema
+            url = self.get_url(self.get_starting_unix())
+            response = self.session.get(url, headers=self.authenticator.auth_headers)
+            if response.status_code == 200:
+                data = self._parse_json_response(response, "getting sample supplier products")
+                items = data.get("items", [])
+                if items:
+                    # Flatten productPurchasePrice for schema generation
+                    item = items[0]
+                    ppp = item.get("productPurchasePrice", {}) or {}
+                    record = dict(item)
+                    record["productPurchasePriceId"] = ppp.get("productPurchasePriceId")
+                    record["purchasePriceEx"] = ppp.get("purchasePriceEx")
+                    return record
+        except Exception as e:
+            self.logger.warning(f"Failed to get sample data for schema generation: {e}")
+        
+        return None
+
+    def get_records(self, context: dict | None) -> Iterable[dict]:
+        """Override to handle the flattened productPurchasePrice."""
+        state = context or {}
+        last_synced_unix = state.get("replication_key_value")
+        
+        if last_synced_unix is None:
+            last_synced_unix = self.get_starting_unix()
+            self.logger.info(f"First run: using default start unix {last_synced_unix}")
+        else:
+            self.logger.info(f"Incremental run: using saved unix {last_synced_unix}")
+        
+        url = self.get_url(last_synced_unix)
+        self.logger.info(f"Fetching supplier products from {url}")
+        
+        response = self.session.get(url, headers=self.authenticator.auth_headers)
+        if response.status_code != 200:
+            self.logger.error(f"Error fetching supplier products: {response.status_code}")
+            self.logger.error(response.text)
+            return
+        
+        data = self._parse_json_response(response, "fetching supplier products")
+        items = data.get("items", [])
+        self.logger.info(f"Retrieved {len(items)} supplier-product relationships")
+        
+        for item in items:
+            # Flatten productPurchasePrice
+            ppp = item.get("productPurchasePrice", {}) or {}
+            record = dict(item)
+            record["productPurchasePriceId"] = ppp.get("productPurchasePriceId")
+            record["purchasePriceEx"] = ppp.get("purchasePriceEx")
+            record["unix_timestamp"] = last_synced_unix
+            yield record
+        
+        # Save current unix timestamp for next run
+        current_unix = self.get_current_unix()
+        self.logger.info(f"Current unix timestamp for next run: {current_unix}")
+        
+        # Update state for next run
+        if context is not None:
+            context["replication_key_value"] = current_unix
+
+class DynamicPurchaseOrdersOptiplyStream(DynamicSchemaStream, BaseOptiplyStream):
+    """Stream for purchase orders using Optiply endpoint with dynamic schema generation."""
+    name = "purchase_orders_optiply"
+    primary_keys = ["productPurchaseOrderId"]
+
+    def __init__(self, tap: "TapVendit"):
+        super().__init__(tap)
+        self.path = "/Optiply/GetProductPurchaseOrdersFromDate"
+
+    def get_url(self, unix_ms: int) -> str:
+        return f"{self.config['api_url']}{self.path}/{unix_ms}"
+
+    def _get_sample_data(self) -> Optional[Dict[str, Any]]:
+        """Get sample data from the API to generate schema."""
+        try:
+            # Get a single purchase order to infer schema
+            url = self.get_url(self.get_starting_unix())
+            response = self.session.get(url, headers=self.authenticator.auth_headers)
+            if response.status_code == 200:
+                data = self._parse_json_response(response, "getting sample purchase orders optiply")
+                items = data.get("items", [])
+                if items:
+                    record = dict(items[0])
+                    record["unix_timestamp"] = self.get_starting_unix()
+                    return record
+        except Exception as e:
+            self.logger.warning(f"Failed to get sample data for schema generation: {e}")
+        
+        return None
+
+class DynamicOrdersOptiplyStream(DynamicSchemaStream, BaseOptiplyStream):
+    """Stream for orders using Optiply endpoint with dynamic schema generation."""
+    name = "orders_optiply"
+    primary_keys = ["customerOrderHeaderId"]
+
+    def __init__(self, tap: "TapVendit"):
+        super().__init__(tap)
+        self.path = "/Optiply/GetOrdersFromDate"
+
+    def get_url(self, unix_ms: int) -> str:
+        return f"{self.config['api_url']}{self.path}/{unix_ms}/true"
+
+    def _get_sample_data(self) -> Optional[Dict[str, Any]]:
+        """Get sample data from the API to generate schema."""
+        try:
+            # Get a single order to infer schema
+            url = self.get_url(self.get_starting_unix())
+            response = self.session.get(url, headers=self.authenticator.auth_headers)
+            if response.status_code == 200:
+                data = self._parse_json_response(response, "getting sample orders optiply")
+                items = data.get("items", [])
+                if items:
+                    record = dict(items[0])
+                    record["unix_timestamp"] = self.get_starting_unix()
+                    return record
+        except Exception as e:
+            self.logger.warning(f"Failed to get sample data for schema generation: {e}")
+        
+        return None
