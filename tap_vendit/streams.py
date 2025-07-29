@@ -585,4 +585,4 @@ class StockChangesStream(BaseOptiplyStream):
     schema = load_schema("stock_changes.json")
 
     def get_url(self, unix_ms: int) -> str:
-        return f"{self.config['api_url']}/ProductStock/GetChangedStockFromDate/{unix_ms}"
+        return f"{self.config['api_url']}/VenditPublicApi/ProductStock/GetChangedStockFromDate/{unix_ms}"
