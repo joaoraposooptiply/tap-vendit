@@ -95,8 +95,12 @@ class BaseFindStream(BaseStream):
         """Get all IDs using field filter with pagination."""
         all_ids = []
         offset = 0
+        page_count = 0
+        
+        self.logger.info(f"🔍 Using field {field_id} filter from {start_date.strftime('%Y-%m-%d %H:%M:%S')}")
         
         while True:
+            page_count += 1
             payload = {
                 "fieldFilters": [
                     {
@@ -111,19 +115,24 @@ class BaseFindStream(BaseStream):
             
             url = f"{self.config['api_url']}{self.path}"
             
-            # Debug logging
+            self.logger.debug(f"📄 Fetching page {page_count} (offset: {offset})...")
             response = self._request("POST", url, json=payload)
             data = self._parse_json_response(response, f"finding {self.name} IDs")
             
             ids = data.get("results", [])
             if not ids:
+                self.logger.debug(f"📄 Page {page_count}: No results")
                 break
                 
             all_ids.extend([str(i) for i in ids if i])
+            self.logger.debug(f"📄 Page {page_count}: Found {len(ids)} IDs (total: {len(all_ids)})")
+            
             if len(ids) < page_size:
+                self.logger.debug(f"📄 Page {page_count}: Last page (less than {page_size} results)")
                 break
             offset += page_size
-            
+        
+        self.logger.info(f"📊 Found {len(all_ids)} total IDs across {page_count} pages")
         return all_ids
 
 class BaseOptiplyStream(BaseStream):
@@ -186,69 +195,129 @@ class BaseFindGetMultipleStream(BaseFindStream):
     
     def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
         """Get records using Find → GetMultiple pattern."""
-        self.logger.info(f"Step 1: Finding {self.name} IDs...")
-        start_date = self.get_starting_time(context)
+        start_time = time.time()
+        self.logger.info(f"🚀 Starting {self.name} sync using Find → GetMultiple pattern...")
         
-        # Get IDs using the Find endpoint
+        start_date = self.get_starting_time(context)
+        self.logger.info(f"📅 Sync start date: {start_date.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # Step 1: Find IDs
+        self.logger.info(f"🔍 Step 1: Finding {self.name} IDs...")
         all_ids = self.get_all_ids_with_filter(
             field_id=FIELD_IDS["LAST_MODIFIED_ORDERS"], 
             start_date=start_date
         )
         
         if not all_ids:
-            self.logger.warning(f"No {self.name} IDs found")
+            self.logger.warning(f"⚠️ No {self.name} IDs found")
             return
             
-        self.logger.info(f"Found {len(all_ids)} {self.name} IDs")
-        self.logger.info("Step 2: Getting details...")
+        find_elapsed = time.time() - start_time
+        self.logger.info(f"✅ Step 1 completed: Found {len(all_ids)} {self.name} IDs ({find_elapsed:.2f}s)")
         
-        # Get details in batches
-        for i in range(0, len(all_ids), DEFAULT_BATCH_SIZE):
+        # Step 2: Get details in batches
+        self.logger.info(f"🔍 Step 2: Getting {self.name} details in batches...")
+        total_batches = (len(all_ids) + DEFAULT_BATCH_SIZE - 1) // DEFAULT_BATCH_SIZE
+        self.logger.info(f"📊 Processing {len(all_ids)} records in {total_batches} batches (batch size: {DEFAULT_BATCH_SIZE})")
+        
+        successful_batches = 0
+        failed_batches = 0
+        total_items = 0
+        
+        for batch_num, i in enumerate(range(0, len(all_ids), DEFAULT_BATCH_SIZE), 1):
             batch = all_ids[i:i + DEFAULT_BATCH_SIZE]
+            batch_size = len(batch)
+            
+            self.logger.info(f"📦 Processing batch {batch_num}/{total_batches} ({batch_size} items)...")
+            
             url = f"{self.config['api_url']}{self.path}"
             response = self._request("POST", url, json={"primaryKeys": batch})
             
             if response.status_code != 200:
-                self.logger.error(f"Error fetching {self.name} batch: {response.status_code}")
+                self.logger.error(f"❌ Failed to fetch {self.name} batch {batch_num}: HTTP {response.status_code}")
+                failed_batches += 1
                 continue
                 
-            data = self._parse_json_response(response, f"fetching {self.name} batch")
-            for item in data.get("items", []):
+            data = self._parse_json_response(response, f"fetching {self.name} batch {batch_num}")
+            items = data.get("items", [])
+            total_items += len(items)
+            
+            self.logger.info(f"✅ Batch {batch_num}: Retrieved {len(items)} items")
+            successful_batches += 1
+            
+            for item in items:
                 yield item
+        
+        total_elapsed = time.time() - start_time
+        self.logger.info(f"🎉 {self.name} sync completed!")
+        self.logger.info(f"📊 Final Summary:")
+        self.logger.info(f"   • Total IDs found: {len(all_ids)}")
+        self.logger.info(f"   • Successful batches: {successful_batches}/{total_batches}")
+        self.logger.info(f"   • Failed batches: {failed_batches}")
+        self.logger.info(f"   • Total items retrieved: {total_items}")
+        self.logger.info(f"   • Total time: {total_elapsed:.2f}s")
+        self.logger.info(f"   • Average time per batch: {total_elapsed/total_batches:.3f}s")
 
 class BaseFindGetWithDetailsStream(BaseFindStream):
     """Base class for streams that use Find → GetWithDetails pattern."""
     
     def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
         """Get records using Find → GetWithDetails pattern."""
-        self.logger.info(f"Step 1: Finding {self.name} IDs...")
-        start_date = self.get_starting_time(context)
+        start_time = time.time()
+        self.logger.info(f"🚀 Starting {self.name} sync using Find → GetWithDetails pattern...")
         
-        # Get IDs using the Find endpoint
+        start_date = self.get_starting_time(context)
+        self.logger.info(f"📅 Sync start date: {start_date.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # Step 1: Find IDs
+        self.logger.info(f"🔍 Step 1: Finding {self.name} IDs...")
         all_ids = self.get_all_ids_with_filter(
             field_id=FIELD_IDS["LAST_MODIFIED"], 
             start_date=start_date
         )
         
         if not all_ids:
-            self.logger.warning(f"No {self.name} IDs found")
+            self.logger.warning(f"⚠️ No {self.name} IDs found")
             return
             
-        self.logger.info(f"Found {len(all_ids)} {self.name} IDs")
-        self.logger.info("Step 2: Getting details...")
+        find_elapsed = time.time() - start_time
+        self.logger.info(f"✅ Step 1 completed: Found {len(all_ids)} {self.name} IDs ({find_elapsed:.2f}s)")
         
-        # Get individual details
-        for item_id in all_ids:
+        # Step 2: Get details
+        self.logger.info(f"🔍 Step 2: Getting {self.name} details...")
+        self.logger.info(f"📊 Processing {len(all_ids)} records...")
+        
+        successful = 0
+        failed = 0
+        
+        for i, item_id in enumerate(all_ids):
+            if (i + 1) % 50 == 0 or (i + 1) == len(all_ids):
+                progress = ((i + 1) / len(all_ids)) * 100
+                self.logger.info(f"🔄 Progress: {i + 1}/{len(all_ids)} ({progress:.1f}%) - Success: {successful}, Failed: {failed}")
+            
             url = f"{self.config['api_url']}{self.path}/{item_id}"
             response = self._request("GET", url)
             
             if response.status_code != 200:
-                self.logger.error(f"Error fetching {self.name} {item_id}: {response.status_code}")
+                self.logger.error(f"❌ Failed to fetch {self.name} {item_id}: HTTP {response.status_code}")
+                failed += 1
                 continue
                 
             data = self._parse_json_response(response, f"fetching {self.name} {item_id}")
             if data:
+                successful += 1
                 yield data
+            else:
+                failed += 1
+        
+        total_elapsed = time.time() - start_time
+        self.logger.info(f"🎉 {self.name} sync completed!")
+        self.logger.info(f"📊 Final Summary:")
+        self.logger.info(f"   • Total IDs found: {len(all_ids)}")
+        self.logger.info(f"   • Successfully processed: {successful}")
+        self.logger.info(f"   • Failed requests: {failed}")
+        self.logger.info(f"   • Total time: {total_elapsed:.2f}s")
+        self.logger.info(f"   • Average time per record: {total_elapsed/len(all_ids):.3f}s")
 
 # Schema loading helper
 def load_schema(filename: str) -> Dict[str, Any]:
@@ -602,21 +671,38 @@ class PrePurchaseOrdersStream(BaseStream):
 
     def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
         """Get all pre purchase orders using GetAll endpoint."""
-        self.logger.info("Getting all pre purchase orders...")
+        start_time = time.time()
+        self.logger.info("🚀 Starting PrePurchaseOrders sync...")
+        self.logger.info(f"📡 Endpoint: {self.config['api_url']}{self.path}")
         
         url = f"{self.config['api_url']}{self.path}"
+        self.logger.info("⏳ Making API request...")
+        
         response = self._request("GET", url)
         
         if response.status_code != 200:
-            self.logger.error(f"Error fetching pre purchase orders: {response.status_code}")
+            self.logger.error(f"❌ Error fetching pre purchase orders: {response.status_code}")
+            self.logger.error(f"Response: {response.text}")
             return
         
+        self.logger.info("✅ API request successful")
         data = self._parse_json_response(response, "fetching pre purchase orders")
         items = data.get("items", [])
-        self.logger.info(f"Retrieved {len(items)} pre purchase orders")
         
+        elapsed = time.time() - start_time
+        self.logger.info(f"📊 Retrieved {len(items)} pre purchase orders in {elapsed:.2f}s")
+        self.logger.info(f"📈 Processing {len(items)} records...")
+        
+        processed = 0
         for item in items:
+            processed += 1
+            if processed % 100 == 0 or processed == len(items):
+                self.logger.info(f"🔄 Processed {processed}/{len(items)} records ({(processed/len(items)*100):.1f}%)")
             yield item
+        
+        total_elapsed = time.time() - start_time
+        self.logger.info(f"🎉 PrePurchaseOrders sync completed! Total time: {total_elapsed:.2f}s")
+        self.logger.info(f"📊 Final count: {len(items)} records processed")
 
 
 class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
@@ -633,15 +719,23 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
 
     def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
         """Override to use orderDatetime field (200) for history purchase orders."""
-        self.logger.info("Step 1: Finding history purchase order IDs...")
-        start_date = self.get_starting_time(context)
+        start_time = time.time()
+        self.logger.info("🚀 Starting HistoryPurchaseOrders incremental sync...")
+        self.logger.info(f"📡 Find endpoint: {self.config['api_url']}/VenditPublicApi/HistoryPurchaseOrders/Find")
+        self.logger.info(f"📡 Details endpoint: {self.config['api_url']}{self.path}")
         
-        # Use the correct Find endpoint for history purchase orders with orderDatetime field
+        start_date = self.get_starting_time(context)
+        self.logger.info(f"📅 Sync start date: {start_date.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # Step 1: Find IDs
+        self.logger.info("🔍 Step 1: Finding history purchase order IDs...")
         find_url = f"{self.config['api_url']}/VenditPublicApi/HistoryPurchaseOrders/Find"
         all_ids = []
         offset = 0
+        page_count = 0
         
         while True:
+            page_count += 1
             payload = {
                 "fieldFilters": [
                     {
@@ -654,38 +748,62 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
                 "operator": 0
             }
             
+            self.logger.info(f"📄 Fetching page {page_count} (offset: {offset})...")
             response = self._request("POST", find_url, json=payload)
             data = self._parse_json_response(response, "finding history purchase order IDs")
             
             ids = data.get("results", [])
             if not ids:
+                self.logger.info(f"📄 Page {page_count}: No more results")
                 break
                 
             all_ids.extend([str(i) for i in ids if i])
+            self.logger.info(f"📄 Page {page_count}: Found {len(ids)} IDs (total so far: {len(all_ids)})")
+            
             if len(ids) < DEFAULT_PAGE_SIZE:
+                self.logger.info(f"📄 Page {page_count}: Last page (less than {DEFAULT_PAGE_SIZE} results)")
                 break
             offset += DEFAULT_PAGE_SIZE
             
         if not all_ids:
-            self.logger.warning("No history purchase order IDs found")
+            self.logger.warning("⚠️ No history purchase order IDs found")
             return
             
-        self.logger.info(f"Found {len(all_ids)} history purchase order IDs")
-        self.logger.info("Step 2: Getting history purchase order details...")
+        find_elapsed = time.time() - start_time
+        self.logger.info(f"✅ Step 1 completed: Found {len(all_ids)} IDs in {page_count} pages ({find_elapsed:.2f}s)")
         
-        # Get individual details
-        for po_id in all_ids:
+        # Step 2: Get details
+        self.logger.info("🔍 Step 2: Fetching purchase order details...")
+        self.logger.info(f"📊 Processing {len(all_ids)} purchase orders...")
+        
+        successful = 0
+        failed = 0
+        
+        for i, po_id in enumerate(all_ids):
+            if (i + 1) % 50 == 0 or (i + 1) == len(all_ids):
+                progress = ((i + 1) / len(all_ids)) * 100
+                self.logger.info(f"🔄 Progress: {i + 1}/{len(all_ids)} ({progress:.1f}%) - Success: {successful}, Failed: {failed}")
+            
             url = f"{self.config['api_url']}{self.path}/{po_id}"
             response = self._request("GET", url)
             
             if response.status_code != 200:
-                self.logger.error(f"Error fetching history purchase order {po_id}: {response.status_code}")
+                self.logger.error(f"❌ Failed to fetch PO {po_id}: HTTP {response.status_code}")
+                failed += 1
                 continue
                 
             data = self._parse_json_response(response, f"fetching history purchase order {po_id}")
             if data:
-                # Ensure orderDatetime is present for replication key tracking
-                if "orderDatetime" not in data:
-                    self.logger.warning(f"History purchase order {po_id} missing orderDatetime field")
-                    continue
+                successful += 1
                 yield data
+            else:
+                failed += 1
+        
+        total_elapsed = time.time() - start_time
+        self.logger.info(f"🎉 HistoryPurchaseOrders sync completed!")
+        self.logger.info(f"📊 Final Summary:")
+        self.logger.info(f"   • Total IDs found: {len(all_ids)}")
+        self.logger.info(f"   • Successfully processed: {successful}")
+        self.logger.info(f"   • Failed requests: {failed}")
+        self.logger.info(f"   • Total time: {total_elapsed:.2f}s")
+        self.logger.info(f"   • Average time per record: {total_elapsed/len(all_ids):.3f}s")
