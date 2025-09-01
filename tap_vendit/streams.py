@@ -48,17 +48,7 @@ class BaseStream(VenditStream):
         return {
             "type": "object",
             "properties": {
-                # Common fields that might be used as replication keys
-                "lastModified": {"type": ["string", "null"], "format": "date-time"},
-                "createdDate": {"type": ["string", "null"], "format": "date-time"},
-                "orderDateTime": {"type": ["string", "null"], "format": "date-time"},
-                "unix_timestamp": {"type": ["integer", "null"]},
-                "custom_sync_date": {"type": ["string", "null"], "format": "date-time"},
-                # PrePurchaseOrders specific fields
-                "productPreorderId": {"type": ["integer", "null"]},
-                "isManual": {"type": ["boolean", "null"]},
-                "officeId": {"type": ["integer", "null"]},
-                "employeeId": {"type": ["integer", "null"]},
+                # Common fields across streams
                 "productId": {"type": ["integer", "null"]},
                 "supplierProductNumber": {"type": ["string", "null"]},
                 "productNumber": {"type": ["string", "null"]},
@@ -66,13 +56,18 @@ class BaseStream(VenditStream):
                 "productDescription": {"type": ["string", "null"]},
                 "productSubdescription": {"type": ["string", "null"]},
                 "productExtraInfo": {"type": ["string", "null"]},
-                "targetSupplierId": {"type": ["integer", "null"]},
                 "amount": {"type": ["number", "null"]},
                 "purchasePriceEx": {"type": ["number", "null"]},
                 "minOrderQuantity": {"type": ["number", "null"]},
                 "extraPriceInfo": {"type": ["string", "null"]},
                 "creationDatetime": {"type": ["string", "null"], "format": "date-time"},
                 "optiplyId": {"type": ["integer", "string", "null"]},
+                # PrePurchaseOrders specific fields
+                "productPreorderId": {"type": ["integer", "null"]},
+                "isManual": {"type": ["boolean", "null"]},
+                "officeId": {"type": ["integer", "null"]},
+                "employeeId": {"type": ["integer", "null"]},
+                "targetSupplierId": {"type": ["integer", "null"]},
                 # Additional fields that might appear in history purchase orders
                 "productPurchaseHeaderId": {"type": ["integer", "null"]},
                 "supplierId": {"type": ["integer", "null"]},
@@ -759,7 +754,13 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
     primary_keys = ["productPurchaseOrderId"]
     replication_key = "custom_sync_date"  # Custom replication key for our own state management
     records_jsonpath = "$"
-    # No schema - dynamic field discovery
+    
+    @property
+    def schema(self):
+        """Return schema with custom_sync_date field for state management."""
+        base_schema = super().schema
+        base_schema["properties"]["custom_sync_date"] = {"type": ["string", "null"], "format": "date-time"}
+        return base_schema
 
     @property
     def path(self):
