@@ -709,7 +709,7 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
     """History Purchase Orders stream using Find → GetWithDetails pattern."""
     name = "history_purchase_orders"
     primary_keys = ["productPurchaseOrderId"]
-    replication_key = "sync_timestamp"  # Custom timestamp for state management
+    replication_key = None  # No replication key - using field filtering for incremental sync
     records_jsonpath = "$"
     schema = load_schema("purchase_order.json")
 
@@ -726,7 +726,7 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
         
         start_date = self.get_starting_time(context)
         self.logger.info(f"📅 Sync start date: {start_date.strftime('%Y-%m-%d %H:%M:%S')}")
-        self.logger.info(f"ℹ️ Using field filtering for incremental sync with custom sync_timestamp")
+        self.logger.info(f"ℹ️ Using field filtering for incremental sync (no replication key)")
         
         # Step 1: Find IDs
         self.logger.info("🔍 Step 1: Finding history purchase order IDs...")
@@ -795,8 +795,6 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
                 
             data = self._parse_json_response(response, f"fetching history purchase order {po_id}")
             if data:
-                # Add custom timestamp for replication key
-                data["sync_timestamp"] = datetime.now().isoformat()
                 successful += 1
                 yield data
             else:
