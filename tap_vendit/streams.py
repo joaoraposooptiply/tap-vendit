@@ -10,7 +10,7 @@ import time
 import os
 import requests
 
-from singer_sdk import typing as th  # JSON Schema typing helpers
+# from singer_sdk import typing as th  # No longer needed with dynamic schemas
 # from singer_sdk.helpers._util import read_json_file  # No longer needed
 
 from tap_vendit.client import VenditStream
@@ -42,6 +42,41 @@ DEFAULT_BATCH_SIZE = 100
 class BaseStream(VenditStream):
     """Base stream with DRY incremental and request logic."""
     
+    @property
+    def schema(self):
+        """Return minimal schema for dynamic field discovery."""
+        return {
+            "type": "object",
+            "properties": {
+                # Common fields that might be used as replication keys
+                "lastModified": {"type": ["string", "null"], "format": "date-time"},
+                "createdDate": {"type": ["string", "null"], "format": "date-time"},
+                "orderDateTime": {"type": ["string", "null"], "format": "date-time"},
+                "unix_timestamp": {"type": ["integer", "null"]},
+                "custom_sync_date": {"type": ["string", "null"], "format": "date-time"},
+                # PrePurchaseOrders specific fields
+                "productPreorderId": {"type": ["integer", "null"]},
+                "isManual": {"type": ["boolean", "null"]},
+                "officeId": {"type": ["integer", "null"]},
+                "employeeId": {"type": ["integer", "null"]},
+                "productId": {"type": ["integer", "null"]},
+                "supplierProductNumber": {"type": ["string", "null"]},
+                "productNumber": {"type": ["string", "null"]},
+                "productType": {"type": ["string", "null"]},
+                "productDescription": {"type": ["string", "null"]},
+                "productSubdescription": {"type": ["string", "null"]},
+                "productExtraInfo": {"type": ["string", "null"]},
+                "targetSupplierId": {"type": ["integer", "null"]},
+                "amount": {"type": ["number", "null"]},
+                "purchasePriceEx": {"type": ["number", "null"]},
+                "minOrderQuantity": {"type": ["number", "null"]},
+                "extraPriceInfo": {"type": ["string", "null"]},
+                "creationDatetime": {"type": ["string", "null"], "format": "date-time"},
+                "optiplyId": {"type": ["integer", "null"]}
+            },
+            "additionalProperties": True
+        }
+    
     def get_starting_time(self, context: Optional[dict]) -> datetime:
         """Get starting time for incremental sync."""
         replication_key_value = self.get_starting_replication_key_value(context)
@@ -49,7 +84,14 @@ class BaseStream(VenditStream):
             return datetime.fromisoformat(replication_key_value)
         start_date = self.config.get("start_date")
         if start_date:
-            return datetime.fromisoformat(start_date)
+            # Handle ISO format with 'Z' timezone suffix
+            if start_date.endswith('Z'):
+                start_date = start_date[:-1] + '+00:00'
+            try:
+                return datetime.fromisoformat(start_date)
+            except ValueError:
+                # Fallback to parsing without timezone info
+                return datetime.fromisoformat(start_date.replace('Z', ''))
         return datetime(1970, 1, 1)
 
     def _request(self, method, url, **kwargs):
@@ -87,9 +129,7 @@ class BaseStream(VenditStream):
 class BaseFindStream(BaseStream):
     """Base class for Find streams that only return IDs."""
     
-    schema = th.PropertiesList(
-        th.Property("id", th.IntegerType),
-    ).to_dict()
+    # No schema - dynamic field discovery
     
     def get_all_ids_with_filter(self, field_id: int, start_date: datetime, page_size: int = DEFAULT_PAGE_SIZE) -> List[str]:
         """Get all IDs using field filter with pagination."""
@@ -662,7 +702,7 @@ class PrePurchaseOrdersStream(BaseStream):
     name = "pre_purchase_orders"
     primary_keys = ["productPreorderId"]
     replication_key = None  # No replication key for GetAll
-    records_jsonpath = "$.items[*]"
+    records_jsonpath = "$.items[*]"  # Use standard Singer SDK record processing
     # No schema - dynamic field discovery
 
     @property
@@ -686,23 +726,12 @@ class PrePurchaseOrdersStream(BaseStream):
             return
         
         self.logger.info("✅ API request successful")
-        data = self._parse_json_response(response, "fetching pre purchase orders")
-        items = data.get("items", [])
         
-        elapsed = time.time() - start_time
-        self.logger.info(f"📊 Retrieved {len(items)} pre purchase orders in {elapsed:.2f}s")
-        self.logger.info(f"📈 Processing {len(items)} records...")
-        
-        processed = 0
-        for item in items:
-            processed += 1
-            if processed % 100 == 0 or processed == len(items):
-                self.logger.info(f"🔄 Processed {processed}/{len(items)} records ({(processed/len(items)*100):.1f}%)")
-            yield item
+        # Let the Singer SDK handle the response parsing
+        yield from self.parse_response(response)
         
         total_elapsed = time.time() - start_time
         self.logger.info(f"🎉 PrePurchaseOrders sync completed! Total time: {total_elapsed:.2f}s")
-        self.logger.info(f"📊 Final count: {len(items)} records processed")
 
 
 class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
@@ -832,7 +861,14 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
         # Fallback to config start_date or default
         start_date = self.config.get("start_date")
         if start_date:
-            return datetime.fromisoformat(start_date)
+            # Handle ISO format with 'Z' timezone suffix
+            if start_date.endswith('Z'):
+                start_date = start_date[:-1] + '+00:00'
+            try:
+                return datetime.fromisoformat(start_date)
+            except ValueError:
+                # Fallback to parsing without timezone info
+                return datetime.fromisoformat(start_date.replace('Z', ''))
         return datetime(1970, 1, 1)
     
     def _increment_stream_state(self, record, context):
