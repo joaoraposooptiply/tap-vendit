@@ -856,6 +856,10 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
                     elif key == "optiplyId" and value == "string":
                         data[key] = None
                 
+                # Fix details field - extract items from the object
+                if "details" in data and isinstance(data["details"], dict) and "items" in data["details"]:
+                    data["details"] = data["details"]["items"]
+                
                 # Add our custom replication key for state management
                 data["custom_sync_date"] = datetime.now().isoformat()
                 
