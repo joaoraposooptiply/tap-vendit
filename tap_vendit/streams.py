@@ -588,83 +588,42 @@ class StockChangesStream(BaseOptiplyStream):
         return f"{self.config['api_url']}/VenditPublicApi/ProductStock/GetChangedStockFromDate/{unix_ms}"
 
 
-class PrePurchaseOrdersStream(BaseFindGetWithDetailsStream):
-    """Pre Purchase Orders stream using Find → GetWithDetails pattern."""
+class PrePurchaseOrdersStream(BaseStream):
+    """Pre Purchase Orders stream using GetAll endpoint."""
     name = "pre_purchase_orders"
     primary_keys = ["productPurchaseOrderId"]
-    replication_key = "createdDate"
-    records_jsonpath = "$"
+    replication_key = None  # No replication key for GetAll
+    records_jsonpath = "$.items[*]"
     schema = load_schema("purchase_order.json")
 
     @property
     def path(self):
-        return "/VenditPublicApi/PrePurchaseOrders/GetWithDetails"
+        return "/VenditPublicApi/PrePurchaseOrders/GetAll"
 
     def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
-        """Override to use createdDate field (200) for pre purchase orders."""
-        self.logger.info("Step 1: Finding pre purchase order IDs...")
-        start_date = self.get_starting_time(context)
+        """Get all pre purchase orders using GetAll endpoint."""
+        self.logger.info("Getting all pre purchase orders...")
         
-        # Use the correct Find endpoint for pre purchase orders with createdDate field
-        find_url = f"{self.config['api_url']}/VenditPublicApi/PrePurchaseOrders/Find"
-        all_ids = []
-        offset = 0
+        url = f"{self.config['api_url']}{self.path}"
+        response = self._request("GET", url)
         
-        while True:
-            payload = {
-                "fieldFilters": [
-                    {
-                        "field": FIELD_IDS["ORDER_DATE_TIME"],  # Field 200 (createdDate)
-                        "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000"),
-                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"]
-                    }
-                ],
-                "paginationOffset": offset,
-                "operator": 0
-            }
-            
-            response = self._request("POST", find_url, json=payload)
-            data = self._parse_json_response(response, "finding pre purchase order IDs")
-            
-            ids = data.get("results", [])
-            if not ids:
-                break
-                
-            all_ids.extend([str(i) for i in ids if i])
-            if len(ids) < DEFAULT_PAGE_SIZE:
-                break
-            offset += DEFAULT_PAGE_SIZE
-            
-        if not all_ids:
-            self.logger.warning("No pre purchase order IDs found")
+        if response.status_code != 200:
+            self.logger.error(f"Error fetching pre purchase orders: {response.status_code}")
             return
-            
-        self.logger.info(f"Found {len(all_ids)} pre purchase order IDs")
-        self.logger.info("Step 2: Getting pre purchase order details...")
         
-        # Get individual details
-        for po_id in all_ids:
-            url = f"{self.config['api_url']}{self.path}/{po_id}"
-            response = self._request("GET", url)
-            
-            if response.status_code != 200:
-                self.logger.error(f"Error fetching pre purchase order {po_id}: {response.status_code}")
-                continue
-                
-            data = self._parse_json_response(response, f"fetching pre purchase order {po_id}")
-            if data:
-                # Ensure createdDate is present for replication key tracking
-                if "createdDate" not in data:
-                    self.logger.warning(f"Pre purchase order {po_id} missing createdDate field")
-                    continue
-                yield data
+        data = self._parse_json_response(response, "fetching pre purchase orders")
+        items = data.get("items", [])
+        self.logger.info(f"Retrieved {len(items)} pre purchase orders")
+        
+        for item in items:
+            yield item
 
 
 class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
     """History Purchase Orders stream using Find → GetWithDetails pattern."""
     name = "history_purchase_orders"
     primary_keys = ["productPurchaseOrderId"]
-    replication_key = "createdDate"
+    replication_key = "orderDatetime"  # Use orderDatetime from schema
     records_jsonpath = "$"
     schema = load_schema("purchase_order.json")
 
@@ -673,11 +632,11 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
         return "/VenditPublicApi/HistoryPurchaseOrders/GetWithDetails"
 
     def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
-        """Override to use createdDate field (200) for history purchase orders."""
+        """Override to use orderDatetime field (200) for history purchase orders."""
         self.logger.info("Step 1: Finding history purchase order IDs...")
         start_date = self.get_starting_time(context)
         
-        # Use the correct Find endpoint for history purchase orders with createdDate field
+        # Use the correct Find endpoint for history purchase orders with orderDatetime field
         find_url = f"{self.config['api_url']}/VenditPublicApi/HistoryPurchaseOrders/Find"
         all_ids = []
         offset = 0
@@ -686,7 +645,7 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
             payload = {
                 "fieldFilters": [
                     {
-                        "field": FIELD_IDS["ORDER_DATE_TIME"],  # Field 200 (createdDate)
+                        "field": FIELD_IDS["ORDER_DATE_TIME"],  # Field 200 (orderDatetime)
                         "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000"),
                         "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"]
                     }
@@ -725,8 +684,8 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
                 
             data = self._parse_json_response(response, f"fetching history purchase order {po_id}")
             if data:
-                # Ensure createdDate is present for replication key tracking
-                if "createdDate" not in data:
-                    self.logger.warning(f"History purchase order {po_id} missing createdDate field")
+                # Ensure orderDatetime is present for replication key tracking
+                if "orderDatetime" not in data:
+                    self.logger.warning(f"History purchase order {po_id} missing orderDatetime field")
                     continue
                 yield data
