@@ -745,6 +745,9 @@ class PrePurchaseOrdersStream(BaseStream):
                 for key, value in record.items():
                     if value == "":
                         record[key] = None
+                    # Handle literal "string" values that should be null
+                    elif key == "optiplyId" and value == "string":
+                        record[key] = None
             yield record
 
 
@@ -848,6 +851,9 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
                 # Clean empty strings that should be nulls
                 for key, value in data.items():
                     if value == "":
+                        data[key] = None
+                    # Handle literal "string" values that should be null
+                    elif key == "optiplyId" and value == "string":
                         data[key] = None
                 
                 # Add our custom replication key for state management
