@@ -72,7 +72,13 @@ class BaseStream(VenditStream):
                 "minOrderQuantity": {"type": ["number", "null"]},
                 "extraPriceInfo": {"type": ["string", "null"]},
                 "creationDatetime": {"type": ["string", "null"], "format": "date-time"},
-                "optiplyId": {"type": ["integer", "null"]}
+                "optiplyId": {"type": ["integer", "string", "null"]},
+                # Additional fields that might appear in history purchase orders
+                "productPurchaseHeaderId": {"type": ["integer", "null"]},
+                "supplierId": {"type": ["integer", "null"]},
+                "deliveryDatetime": {"type": ["string", "null"], "format": "date-time"},
+                "deliveryDocumentNumber": {"type": ["string", "null"]},
+                "details": {"type": ["array", "null"]}
             },
             "additionalProperties": True
         }
@@ -825,6 +831,11 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
                 
             data = self._parse_json_response(response, f"fetching history purchase order {po_id}")
             if data:
+                # Clean empty strings that should be nulls
+                for key, value in data.items():
+                    if value == "":
+                        data[key] = None
+                
                 # Add our custom replication key for state management
                 data["custom_sync_date"] = datetime.now().isoformat()
                 
