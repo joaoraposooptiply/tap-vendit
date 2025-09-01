@@ -709,7 +709,7 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
     """History Purchase Orders stream using Find → GetWithDetails pattern."""
     name = "history_purchase_orders"
     primary_keys = ["productPurchaseOrderId"]
-    replication_key = None  # No replication key - using field filtering for incremental sync
+    replication_key = "custom_sync_date"  # Custom replication key for our own state management
     records_jsonpath = "$"
     schema = load_schema("purchase_order.json")
 
@@ -726,7 +726,7 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
         
         start_date = self.get_starting_time(context)
         self.logger.info(f"📅 Sync start date: {start_date.strftime('%Y-%m-%d %H:%M:%S')}")
-        self.logger.info(f"ℹ️ Using field filtering for incremental sync (no replication key)")
+        self.logger.info(f"ℹ️ Using field filtering for incremental sync with custom state management")
         
         # Step 1: Find IDs
         self.logger.info("🔍 Step 1: Finding history purchase order IDs...")
@@ -779,6 +779,7 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
         
         successful = 0
         failed = 0
+        latest_date = start_date
         
         for i, po_id in enumerate(all_ids):
             if (i + 1) % 50 == 0 or (i + 1) == len(all_ids):
@@ -795,6 +796,15 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
                 
             data = self._parse_json_response(response, f"fetching history purchase order {po_id}")
             if data:
+                # Add our custom replication key for state management
+                data["custom_sync_date"] = datetime.now().isoformat()
+                
+                # Track the latest date for next sync
+                if hasattr(self, '_latest_sync_date'):
+                    self._latest_sync_date = max(self._latest_sync_date, datetime.now())
+                else:
+                    self._latest_sync_date = datetime.now()
+                
                 successful += 1
                 yield data
             else:
@@ -808,3 +818,24 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
         self.logger.info(f"   • Failed requests: {failed}")
         self.logger.info(f"   • Total time: {total_elapsed:.2f}s")
         self.logger.info(f"   • Average time per record: {total_elapsed/len(all_ids):.3f}s")
+    
+    def get_starting_time(self, context: Optional[dict]) -> datetime:
+        """Override to handle our own state management."""
+        if context and "replication_key_value" in context:
+            # Use our saved state
+            saved_date = context["replication_key_value"]
+            if isinstance(saved_date, str):
+                return datetime.fromisoformat(saved_date)
+            elif isinstance(saved_date, datetime):
+                return saved_date
+        
+        # Fallback to config start_date or default
+        start_date = self.config.get("start_date")
+        if start_date:
+            return datetime.fromisoformat(start_date)
+        return datetime(1970, 1, 1)
+    
+    def _increment_stream_state(self, record, context):
+        """Override to handle our own state updates."""
+        if context and hasattr(self, '_latest_sync_date'):
+            context["replication_key_value"] = self._latest_sync_date.isoformat()
