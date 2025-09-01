@@ -733,11 +733,24 @@ class PrePurchaseOrdersStream(BaseStream):
         
         self.logger.info("✅ API request successful")
         
-        # Let the Singer SDK handle the response parsing
+        # Let the Singer SDK handle the response parsing with data cleaning
         yield from self.parse_response(response)
         
         total_elapsed = time.time() - start_time
         self.logger.info(f"🎉 PrePurchaseOrders sync completed! Total time: {total_elapsed:.2f}s")
+    
+    def parse_response(self, response: requests.Response) -> t.Iterable[dict]:
+        """Override parse_response to add data cleaning for empty strings."""
+        # Get the records from the parent parse_response
+        records = super().parse_response(response)
+        
+        # Clean empty strings that should be nulls
+        for record in records:
+            if isinstance(record, dict):
+                for key, value in record.items():
+                    if value == "":
+                        record[key] = None
+            yield record
 
 
 class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
