@@ -11,15 +11,15 @@ import os
 import requests
 
 from singer_sdk import typing as th  # JSON Schema typing helpers
-from singer_sdk.helpers._util import read_json_file
+# from singer_sdk.helpers._util import read_json_file  # No longer needed
 
 from tap_vendit.client import VenditStream
 
 if TYPE_CHECKING:
     from tap_vendit.tap import TapVendit
 
-# Schema directory constant
-SCHEMAS_DIR = os.path.join(os.path.dirname(__file__), "schemas")
+# Schema directory constant - no longer needed with dynamic schemas
+# SCHEMAS_DIR = os.path.join(os.path.dirname(__file__), "schemas")
 
 # Constants for common field IDs and values
 FIELD_IDS = {
@@ -319,10 +319,10 @@ class BaseFindGetWithDetailsStream(BaseFindStream):
         self.logger.info(f"   • Total time: {total_elapsed:.2f}s")
         self.logger.info(f"   • Average time per record: {total_elapsed/len(all_ids):.3f}s")
 
-# Schema loading helper
-def load_schema(filename: str) -> Dict[str, Any]:
-    """Load schema from JSON file."""
-    return read_json_file(os.path.join(SCHEMAS_DIR, filename))
+# Schema loading helper - no longer needed with dynamic schemas
+# def load_schema(filename: str) -> Dict[str, Any]:
+#     """Load schema from JSON file."""
+#     return read_json_file(os.path.join(SCHEMAS_DIR, filename))
 
 # Stream implementations
 class ProductsStream(BaseFindGetMultipleStream):
@@ -331,7 +331,7 @@ class ProductsStream(BaseFindGetMultipleStream):
     primary_keys = ["productId"]
     replication_key = "lastModified"
     records_jsonpath = "$.items[*]"
-    schema = load_schema("product.json")
+    # No schema - dynamic field discovery
 
     @property
     def path(self):
@@ -399,7 +399,7 @@ class SuppliersStream(BaseFindGetMultipleStream):
     primary_keys = ["supplierId"]
     replication_key = None
     records_jsonpath = "$.items[*]"
-    schema = load_schema("supplier.json")
+    # No schema - dynamic field discovery
 
     @property
     def path(self):
@@ -441,7 +441,7 @@ class OrdersStream(BaseFindGetWithDetailsStream):
     name = "orders"
     primary_keys = ["customerOrderHeaderId"]
     records_jsonpath = "$"
-    schema = load_schema("order.json")
+    # No schema - dynamic field discovery
 
     @property
     def path(self):
@@ -509,7 +509,7 @@ class PurchaseOrdersStream(BaseFindGetWithDetailsStream):
     primary_keys = ["productPurchaseOrderId"]
     replication_key = None
     records_jsonpath = "$"
-    schema = load_schema("purchase_order.json")
+    # No schema - dynamic field discovery
 
     @property
     def path(self):
@@ -574,7 +574,7 @@ class SupplierProductsStream(BaseOptiplyStream):
     """Stream for supplier-product relationships using Optiply endpoint."""
     name = "supplier_products"
     primary_keys = ["productSupplierId"]
-    schema = load_schema("supplier_product.json")
+    # No schema - dynamic field discovery
 
     def get_url(self, unix_ms: int) -> str:
         return f"{self.config['api_url']}/Optiply/GetProductSuppliersFromDate/{unix_ms}"
@@ -624,7 +624,7 @@ class PurchaseOrdersOptiplyStream(BaseOptiplyStream):
     """Stream for purchase orders using Optiply endpoint."""
     name = "purchase_orders_optiply"
     primary_keys = ["productPurchaseOrderId"]
-    schema = load_schema("purchase_order_optiply.json")
+    # No schema - dynamic field discovery
 
     def __init__(self, tap: "TapVendit"):
         super().__init__(tap)
@@ -637,7 +637,7 @@ class OrdersOptiplyStream(BaseOptiplyStream):
     """Stream for orders using Optiply endpoint."""
     name = "orders_optiply"
     primary_keys = ["customerOrderHeaderId"]
-    schema = load_schema("order_optiply.json")
+    # No schema - dynamic field discovery
 
     def __init__(self, tap: "TapVendit"):
         super().__init__(tap)
@@ -651,7 +651,7 @@ class StockChangesStream(BaseOptiplyStream):
     """Stream for stock changes using Optiply endpoint."""
     name = "stock_changes"
     primary_keys = ["productStockId"]
-    schema = load_schema("stock_changes.json")
+    # No schema - dynamic field discovery
 
     def get_url(self, unix_ms: int) -> str:
         return f"{self.config['api_url']}/VenditPublicApi/ProductStock/GetChangedStockFromDate/{unix_ms}"
@@ -660,10 +660,10 @@ class StockChangesStream(BaseOptiplyStream):
 class PrePurchaseOrdersStream(BaseStream):
     """Pre Purchase Orders stream using GetAll endpoint."""
     name = "pre_purchase_orders"
-    primary_keys = ["productPurchaseOrderId"]
+    primary_keys = ["productPreorderId"]
     replication_key = None  # No replication key for GetAll
     records_jsonpath = "$.items[*]"
-    schema = load_schema("purchase_order.json")
+    # No schema - dynamic field discovery
 
     @property
     def path(self):
@@ -711,7 +711,7 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
     primary_keys = ["productPurchaseOrderId"]
     replication_key = "custom_sync_date"  # Custom replication key for our own state management
     records_jsonpath = "$"
-    schema = load_schema("purchase_order.json")
+    # No schema - dynamic field discovery
 
     @property
     def path(self):
