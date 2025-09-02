@@ -510,7 +510,58 @@ class SuppliersStream(BaseFindGetMultipleStream):
     primary_keys = ["supplierId"]
     replication_key = None
     records_jsonpath = "$.items[*]"
-    # No schema - dynamic field discovery
+    
+    @property
+    def schema(self):
+        """Return schema specific to suppliers data."""
+        return {
+            "type": "object",
+            "properties": {
+                "supplierId": {"type": ["integer", "null"]},
+                "supplierName": {"type": ["string", "null"]},
+                "supplierNumber": {"type": ["string", "null"]},
+                "supplierEmail": {"type": ["string", "null"]},
+                "supplierWebsite": {"type": ["string", "null"]},
+                "supplierBankAccount": {"type": ["string", "null"]},
+                "supplierInfo": {"type": ["string", "null"]},
+                "supplierDebtNumber": {"type": ["string", "null"]},
+                "orderCommunicationServiceId": {"type": ["integer", "null"]},
+                "orderLayoutId": {"type": ["integer", "null"]},
+                "orderEmailAttachmentFilename": {"type": ["string", "null"]},
+                "orderEmailTo": {"type": ["string", "null"]},
+                "orderEmailToCc": {"type": ["string", "null"]},
+                "stockinfoCommunicationServiceId": {"type": ["integer", "null"]},
+                "stockinfoUrl": {"type": ["string", "null"]},
+                "deliveryCommunicationServiceId": {"type": ["integer", "null"]},
+                "stockLookupTypeEnum": {"type": ["integer", "null"]},
+                "supplierGroupBitvalue": {"type": ["integer", "null"]},
+                "extraInfo": {"type": ["string", "null"]},
+                "orderCommunicationServiceLayoutId": {"type": ["integer", "null"]},
+                "orderFtpServer": {"type": ["string", "null"]},
+                "orderFtpPort": {"type": ["integer", "null"]},
+                "orderFtpPath": {"type": ["string", "null"]},
+                "orderFtpFilename": {"type": ["string", "null"]},
+                "orderFtpPassiveMode": {"type": ["boolean", "null"]},
+                "orderFtpSftp": {"type": ["boolean", "null"]},
+                "orderEmailSubject": {"type": ["string", "null"]},
+                "orderEmailAsAttachment": {"type": ["boolean", "null"]},
+                "orderLocalFilePath": {"type": ["string", "null"]},
+                "orderLocalFileFilename": {"type": ["string", "null"]},
+                "glnNumber": {"type": ["string", "null"]},
+                "supplierImageUrl": {"type": ["string", "null"]},
+                "minimumOrderAmount": {"type": ["integer", "null"]},
+                "extraCosts": {"type": ["number", "null"]},
+                "productPriceCommunicationServiceId": {"type": ["integer", "null"]},
+                "deliveryAutoAddProductSupplier": {"type": ["boolean", "null"]},
+                "vatNumber": {"type": ["string", "null"]},
+                "deliveryDays": {"type": ["integer", "null"]},
+                "supplierGuid": {"type": ["string", "null"]},
+                "orderFtpTimeout": {"type": ["integer", "null"]},
+                "bicAndSwift": {"type": ["string", "null"]},
+                "banknummerAndIBAN": {"type": ["string", "null"]}
+            },
+            "additionalProperties": True
+        }
 
     @property
     def path(self):
@@ -552,7 +603,54 @@ class OrdersStream(BaseFindGetWithDetailsStream):
     name = "orders"
     primary_keys = ["customerOrderHeaderId"]
     records_jsonpath = "$"
-    # No schema - dynamic field discovery
+    
+    @property
+    def schema(self):
+        """Return schema specific to customer orders data."""
+        return {
+            "type": "object",
+            "properties": {
+                "customerOrderHeaderId": {"type": ["integer", "null"]},
+                "orderDetails": {"type": ["array", "null"]},
+                "customerId": {"type": ["integer", "null"]},
+                "planningId": {"type": ["integer", "null"]},
+                "customerOrderNumber": {"type": ["string", "null"]},
+                "orderTypeId": {"type": ["integer", "null"]},
+                "orderPriorityId": {"type": ["integer", "null"]},
+                "deliveryDate": {"type": ["string", "null"], "format": "date-time"},
+                "activationDate": {"type": ["string", "null"], "format": "date-time"},
+                "orderStatusId": {"type": ["integer", "null"]},
+                "completeDelivery": {"type": ["boolean", "null"]},
+                "deliveryNotificationType": {"type": ["integer", "null"]},
+                "invoiceAddressId": {"type": ["integer", "null"]},
+                "invoiceContactId": {"type": ["integer", "null"]},
+                "deliveryAddressId": {"type": ["integer", "null"]},
+                "deliveryContactId": {"type": ["integer", "null"]},
+                "journalId": {"type": ["integer", "null"]},
+                "stockStatusEnum": {"type": ["integer", "null"]},
+                "saleExVat": {"type": ["number", "null"]},
+                "invoiceDiscountPercentage": {"type": ["number", "null"]},
+                "invoiceDiscountAmount": {"type": ["number", "null"]},
+                "discountIsPercentage": {"type": ["boolean", "null"]},
+                "baselineReferenceNumber": {"type": ["string", "null"]},
+                "orderLabelNumber": {"type": ["string", "null"]},
+                "orderStatusDate": {"type": ["string", "null"], "format": "date-time"},
+                "orderStatusDateFormat": {"type": ["string", "null"]},
+                "orderSubTitle": {"type": ["string", "null"]},
+                "telecomReferenceNumber": {"type": ["string", "null"]},
+                "originalWorkstationId": {"type": ["integer", "null"]},
+                "originalDrawerId": {"type": ["integer", "null"]},
+                "internalMemo": {"type": ["string", "null"]},
+                "statusEmployeeId": {"type": ["integer", "null"]},
+                "url": {"type": ["string", "null"]},
+                "dropshipmentType": {"type": ["integer", "null"]},
+                "purchaseOrderNumber": {"type": ["string", "null"]},
+                "officeId": {"type": ["integer", "null"]},
+                "employeeId": {"type": ["integer", "null"]},
+                "creationDatetime": {"type": ["string", "null"], "format": "date-time"}
+            },
+            "additionalProperties": True
+        }
 
     @property
     def path(self):
