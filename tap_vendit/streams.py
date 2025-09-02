@@ -909,7 +909,7 @@ class OrdersOptiplyStream(BaseOptiplyStream):
                 "deliveryContactId": {"type": ["integer", "null"]},
                 "journalId": {"type": ["integer", "null"]},
                 "stockStatusEnum": {"type": ["integer", "null"]},
-                "saleExVat": {"type": ["number", "null"]},
+                "saleExVat": {"type": ["number", "boolean", "null"]},
                 "invoiceDiscountPercentage": {"type": ["number", "null"]},
                 "invoiceDiscountAmount": {"type": ["number", "null"]},
                 "discountIsPercentage": {"type": ["boolean", "null"]},
