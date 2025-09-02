@@ -47,37 +47,7 @@ class BaseStream(VenditStream):
         """Return minimal schema for dynamic field discovery."""
         return {
             "type": "object",
-            "properties": {
-                # Common fields across streams
-                "productId": {"type": ["integer", "null"]},
-                "supplierProductNumber": {"type": ["string", "null"]},
-                "productNumber": {"type": ["string", "null"]},
-                "productType": {"type": ["string", "null"]},
-                "productDescription": {"type": ["string", "null"]},
-                "productSubdescription": {"type": ["string", "null"]},
-                "productExtraInfo": {"type": ["string", "null"]},
-                "amount": {"type": ["number", "null"]},
-                "purchasePriceEx": {"type": ["number", "null"]},
-                "minOrderQuantity": {"type": ["number", "null"]},
-                "extraPriceInfo": {"type": ["string", "null"]},
-                "creationDatetime": {"type": ["string", "null"], "format": "date-time"},
-                "optiplyId": {"type": ["integer", "string", "null"]},
-                # PrePurchaseOrders specific fields
-                "productPreorderId": {"type": ["integer", "null"]},
-                "isManual": {"type": ["boolean", "null"]},
-                "officeId": {"type": ["integer", "null"]},
-                "employeeId": {"type": ["integer", "null"]},
-                "targetSupplierId": {"type": ["integer", "null"]},
-                # Additional fields that might appear in history purchase orders
-                "productPurchaseHeaderId": {"type": ["integer", "null"]},
-                "supplierId": {"type": ["integer", "null"]},
-                "deliveryDatetime": {"type": ["string", "null"], "format": "date-time"},
-                "deliveryDocumentNumber": {"type": ["string", "null"]},
-                "details": {"type": ["array", "null"]},
-                # Fields needed by existing streams
-                "unix_timestamp": {"type": ["integer", "null"]},
-                "lastModified": {"type": ["string", "null"], "format": "date-time"}
-            },
+            "properties": {},
             "additionalProperties": True
         }
     
@@ -783,7 +753,49 @@ class SupplierProductsStream(BaseOptiplyStream):
     """Stream for supplier-product relationships using Optiply endpoint."""
     name = "supplier_products"
     primary_keys = ["productSupplierId"]
-    # No schema - dynamic field discovery
+    
+    @property
+    def schema(self):
+        """Return schema specific to supplier products data."""
+        return {
+            "type": "object",
+            "properties": {
+                "productSupplierId": {"type": ["integer", "null"]},
+                "productId": {"type": ["integer", "null"]},
+                "supplierId": {"type": ["integer", "null"]},
+                "supplierProductNumber": {"type": ["string", "null"]},
+                "productNumber": {"type": ["string", "null"]},
+                "productType": {"type": ["string", "null"]},
+                "productDescription": {"type": ["string", "null"]},
+                "productSubdescription": {"type": ["string", "null"]},
+                "productExtraInfo": {"type": ["string", "null"]},
+                "amount": {"type": ["number", "null"]},
+                "purchasePriceEx": {"type": ["number", "null"]},
+                "minOrderQuantity": {"type": ["number", "null"]},
+                "extraPriceInfo": {"type": ["string", "null"]},
+                "creationDatetime": {"type": ["string", "null"], "format": "date-time"},
+                "optiplyId": {"type": ["integer", "string", "null"]},
+                "productPreorderId": {"type": ["integer", "null"]},
+                "isManual": {"type": ["boolean", "null"]},
+                "officeId": {"type": ["integer", "null"]},
+                "employeeId": {"type": ["integer", "null"]},
+                "targetSupplierId": {"type": ["integer", "null"]},
+                "productPurchaseHeaderId": {"type": ["integer", "null"]},
+                "deliveryDatetime": {"type": ["string", "null"], "format": "date-time"},
+                "deliveryDocumentNumber": {"type": ["string", "null"]},
+                "details": {"type": ["array", "null"]},
+                "unix_timestamp": {"type": ["integer", "null"]},
+                "lastModified": {"type": ["string", "null"], "format": "date-time"},
+                "preferredDefaultSupplier": {"type": ["boolean", "null"]},
+                "recommendedSalesPriceInc": {"type": ["number", "null"]},
+                "availabilityStatusId": {"type": ["integer", "null"]},
+                "supplierStock2": {"type": ["string", "null"]},
+                "productPurchasePrice": {"type": ["object", "null"]},
+                "productPurchasePriceId": {"type": ["integer", "null"]},
+                "expectedArrivalDatetime": {"type": ["string", "null"], "format": "date-time"}
+            },
+            "additionalProperties": True
+        }
 
     def get_url(self, unix_ms: int) -> str:
         return f"{self.config['api_url']}/Optiply/GetProductSuppliersFromDate/{unix_ms}"
@@ -869,7 +881,55 @@ class OrdersOptiplyStream(BaseOptiplyStream):
     """Stream for orders using Optiply endpoint."""
     name = "orders_optiply"
     primary_keys = ["customerOrderHeaderId"]
-    # No schema - dynamic field discovery
+    
+    @property
+    def schema(self):
+        """Return schema specific to orders optiply data."""
+        return {
+            "type": "object",
+            "properties": {
+                "customerOrderHeaderId": {"type": ["integer", "null"]},
+                "orderDetails": {"type": ["array", "null"]},
+                "customerId": {"type": ["integer", "null"]},
+                "planningId": {"type": ["integer", "null"]},
+                "customerOrderNumber": {"type": ["string", "null"]},
+                "orderTypeId": {"type": ["integer", "null"]},
+                "orderPriorityId": {"type": ["integer", "null"]},
+                "deliveryDate": {"type": ["string", "null"], "format": "date-time"},
+                "activationDate": {"type": ["string", "null"], "format": "date-time"},
+                "orderStatusId": {"type": ["integer", "null"]},
+                "completeDelivery": {"type": ["boolean", "null"]},
+                "deliveryNotificationType": {"type": ["integer", "null"]},
+                "invoiceAddressId": {"type": ["integer", "null"]},
+                "invoiceContactId": {"type": ["integer", "null"]},
+                "deliveryAddressId": {"type": ["integer", "null"]},
+                "deliveryContactId": {"type": ["integer", "null"]},
+                "journalId": {"type": ["integer", "null"]},
+                "stockStatusEnum": {"type": ["integer", "null"]},
+                "saleExVat": {"type": ["number", "null"]},
+                "invoiceDiscountPercentage": {"type": ["number", "null"]},
+                "invoiceDiscountAmount": {"type": ["number", "null"]},
+                "discountIsPercentage": {"type": ["boolean", "null"]},
+                "baselineReferenceNumber": {"type": ["string", "null"]},
+                "orderLabelNumber": {"type": ["string", "null"]},
+                "orderStatusDate": {"type": ["string", "null"], "format": "date-time"},
+                "orderStatusDateFormat": {"type": ["string", "null"]},
+                "orderSubTitle": {"type": ["string", "null"]},
+                "telecomReferenceNumber": {"type": ["string", "null"]},
+                "originalWorkstationId": {"type": ["integer", "null"]},
+                "originalDrawerId": {"type": ["integer", "null"]},
+                "internalMemo": {"type": ["string", "null"]},
+                "statusEmployeeId": {"type": ["integer", "null"]},
+                "url": {"type": ["string", "null"]},
+                "dropshipmentType": {"type": ["integer", "null"]},
+                "purchaseOrderNumber": {"type": ["string", "null"]},
+                "officeId": {"type": ["integer", "null"]},
+                "employeeId": {"type": ["integer", "null"]},
+                "creationDatetime": {"type": ["string", "null"], "format": "date-time"},
+                "unix_timestamp": {"type": ["integer", "null"]}
+            },
+            "additionalProperties": True
+        }
 
     def __init__(self, tap: "TapVendit"):
         super().__init__(tap)
