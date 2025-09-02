@@ -175,7 +175,7 @@ class BaseOptiplyStream(BaseStream):
     def get_records(self, context: dict | None) -> Iterable[dict]:
         """Get records using unix timestamp incremental sync."""
         state = context or {}
-        last_synced_unix = state.get("replication_key_value")
+        last_synced_unix = state.get(self.replication_key)
         
         if last_synced_unix is None:
             last_synced_unix = self.get_starting_unix()
@@ -196,29 +196,19 @@ class BaseOptiplyStream(BaseStream):
         items = data.get("items", [])
         self.logger.info(f"Retrieved {len(items)} records")
         
-        for item in items:
-            # Add unix timestamp to the record
-            record = dict(item)
-            record["unix_timestamp"] = last_synced_unix
-            yield record
-        
         # Save current unix timestamp for next run
         current_unix = self.get_current_unix()
         self.logger.info(f"Current unix timestamp for next run: {current_unix}")
         
-        # Update state for next run
-        if context is not None:
-            context["replication_key_value"] = current_unix
+        for item in items:
+            # Add unix timestamp to the record with the current timestamp for state management
+            record = dict(item)
+            record["unix_timestamp"] = current_unix
+            yield record
 
     def get_url(self, unix_ms: int) -> str:
         """Get URL for the Optiply endpoint. Override in subclasses."""
         raise NotImplementedError("Subclasses must implement get_url")
-    
-    def _increment_stream_state(self, record, context):
-        """Update the stream state with the latest unix timestamp."""
-        if context is not None:
-            current_unix = self.get_current_unix()
-            context["replication_key_value"] = current_unix
 
 class BaseFindGetMultipleStream(BaseFindStream):
     """Base class for streams that use Find → GetMultiple pattern."""
@@ -803,7 +793,7 @@ class SupplierProductsStream(BaseOptiplyStream):
     def get_records(self, context: dict | None) -> Iterable[dict]:
         """Override to handle the flattened productPurchasePrice."""
         state = context or {}
-        last_synced_unix = state.get("replication_key_value")
+        last_synced_unix = state.get(self.replication_key)
         
         if last_synced_unix is None:
             last_synced_unix = self.get_starting_unix()
@@ -824,28 +814,20 @@ class SupplierProductsStream(BaseOptiplyStream):
         items = data.get("items", [])
         self.logger.info(f"Retrieved {len(items)} supplier-product relationships")
         
+        # Save current unix timestamp for next run
+        current_unix = self.get_current_unix()
+        self.logger.info(f"Current unix timestamp for next run: {current_unix}")
+        
         for item in items:
             # Flatten productPurchasePrice
             ppp = item.get("productPurchasePrice", {}) or {}
             record = dict(item)
             record["productPurchasePriceId"] = ppp.get("productPurchasePriceId")
             record["purchasePriceEx"] = ppp.get("purchasePriceEx")
-            record["unix_timestamp"] = last_synced_unix
+            record["unix_timestamp"] = current_unix
             yield record
-        
-        # Save current unix timestamp for next run
-        current_unix = self.get_current_unix()
-        self.logger.info(f"Current unix timestamp for next run: {current_unix}")
-        
-        # Update state for next run
-        if context is not None:
-            context["replication_key_value"] = current_unix
     
-    def _increment_stream_state(self, record, context):
-        """Update the stream state with the latest unix timestamp."""
-        if context is not None:
-            current_unix = self.get_current_unix()
-            context["replication_key_value"] = current_unix
+
 
 class PurchaseOrdersOptiplyStream(BaseOptiplyStream):
     """Stream for purchase orders using Optiply endpoint."""
