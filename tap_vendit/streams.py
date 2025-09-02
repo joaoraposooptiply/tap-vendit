@@ -734,7 +734,26 @@ class StockChangesStream(BaseOptiplyStream):
     """Stream for stock changes using Optiply endpoint."""
     name = "stock_changes"
     primary_keys = ["productStockId"]
-    # No schema - dynamic field discovery
+    
+    @property
+    def schema(self):
+        """Return schema specific to stock changes data."""
+        return {
+            "type": "object",
+            "properties": {
+                "stock": {"type": ["number", "null"]},
+                "availableStock": {"type": ["number", "null"]},
+                "locationName": {"type": ["string", "null"]},
+                "productStockId": {"type": ["integer", "null"]},
+                "stockLocationId": {"type": ["integer", "null"]},
+                "storageLocationId": {"type": ["integer", "null"]},
+                "officeId": {"type": ["integer", "null"]},
+                "productId": {"type": ["integer", "null"]},
+                "storageName": {"type": ["string", "null"]},
+                "unix_timestamp": {"type": ["integer", "null"]}
+            },
+            "additionalProperties": True
+        }
 
     def get_url(self, unix_ms: int) -> str:
         return f"{self.config['api_url']}/VenditPublicApi/ProductStock/GetChangedStockFromDate/{unix_ms}"
@@ -952,3 +971,4 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
         """Override to handle our own state updates."""
         if context and hasattr(self, '_latest_sync_date'):
             context["replication_key_value"] = self._latest_sync_date.isoformat()
+.
