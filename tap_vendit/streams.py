@@ -73,7 +73,10 @@ class BaseStream(VenditStream):
                 "supplierId": {"type": ["integer", "null"]},
                 "deliveryDatetime": {"type": ["string", "null"], "format": "date-time"},
                 "deliveryDocumentNumber": {"type": ["string", "null"]},
-                "details": {"type": ["array", "null"]}
+                "details": {"type": ["array", "null"]},
+                # Fields needed by existing streams
+                "unix_timestamp": {"type": ["integer", "null"]},
+                "lastModified": {"type": ["string", "null"], "format": "date-time"}
             },
             "additionalProperties": True
         }
@@ -82,7 +85,17 @@ class BaseStream(VenditStream):
         """Get starting time for incremental sync."""
         replication_key_value = self.get_starting_replication_key_value(context)
         if replication_key_value:
-            return datetime.fromisoformat(replication_key_value)
+            # Handle ISO format with 'Z' timezone suffix
+            if isinstance(replication_key_value, str):
+                if replication_key_value.endswith('Z'):
+                    replication_key_value = replication_key_value[:-1] + '+00:00'
+                try:
+                    return datetime.fromisoformat(replication_key_value)
+                except ValueError:
+                    # Fallback to parsing without timezone info
+                    return datetime.fromisoformat(replication_key_value.replace('Z', ''))
+            elif isinstance(replication_key_value, datetime):
+                return replication_key_value
         start_date = self.config.get("start_date")
         if start_date:
             # Handle ISO format with 'Z' timezone suffix
@@ -230,6 +243,12 @@ class BaseOptiplyStream(BaseStream):
     def get_url(self, unix_ms: int) -> str:
         """Get URL for the Optiply endpoint. Override in subclasses."""
         raise NotImplementedError("Subclasses must implement get_url")
+    
+    def _increment_stream_state(self, record, context):
+        """Update the stream state with the latest unix timestamp."""
+        if context is not None:
+            current_unix = self.get_current_unix()
+            context["replication_key_value"] = current_unix
 
 class BaseFindGetMultipleStream(BaseFindStream):
     """Base class for streams that use Find → GetMultiple pattern."""
@@ -659,6 +678,12 @@ class SupplierProductsStream(BaseOptiplyStream):
         
         # Update state for next run
         if context is not None:
+            context["replication_key_value"] = current_unix
+    
+    def _increment_stream_state(self, record, context):
+        """Update the stream state with the latest unix timestamp."""
+        if context is not None:
+            current_unix = self.get_current_unix()
             context["replication_key_value"] = current_unix
 
 class PurchaseOrdersOptiplyStream(BaseOptiplyStream):
