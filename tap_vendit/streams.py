@@ -971,4 +971,3 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
         """Override to handle our own state updates."""
         if context and hasattr(self, '_latest_sync_date'):
             context["replication_key_value"] = self._latest_sync_date.isoformat()
-.
