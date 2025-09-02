@@ -174,8 +174,8 @@ class BaseOptiplyStream(BaseStream):
 
     def get_records(self, context: dict | None) -> Iterable[dict]:
         """Get records using unix timestamp incremental sync."""
-        state = context or {}
-        last_synced_unix = state.get(self.replication_key)
+        # Use the Singer SDK's state management
+        last_synced_unix = self.get_starting_replication_key_value(context)
         
         if last_synced_unix is None:
             last_synced_unix = self.get_starting_unix()
@@ -201,7 +201,7 @@ class BaseOptiplyStream(BaseStream):
         self.logger.info(f"Current unix timestamp for next run: {current_unix}")
         
         for item in items:
-            # Add unix timestamp to the record with the current timestamp for state management
+            # Add unix timestamp to the record for state management
             record = dict(item)
             record["unix_timestamp"] = current_unix
             yield record
@@ -774,8 +774,8 @@ class SupplierProductsStream(BaseOptiplyStream):
                 "deliveryDatetime": {"type": ["string", "null"], "format": "date-time"},
                 "deliveryDocumentNumber": {"type": ["string", "null"]},
                 "details": {"type": ["array", "null"]},
-                "unix_timestamp": {"type": ["integer", "null"]},
                 "lastModified": {"type": ["string", "null"], "format": "date-time"},
+                "unix_timestamp": {"type": ["integer", "null"]},
                 "preferredDefaultSupplier": {"type": ["boolean", "null"]},
                 "recommendedSalesPriceInc": {"type": ["number", "null"]},
                 "availabilityStatusId": {"type": ["integer", "null"]},
@@ -792,39 +792,13 @@ class SupplierProductsStream(BaseOptiplyStream):
 
     def get_records(self, context: dict | None) -> Iterable[dict]:
         """Override to handle the flattened productPurchasePrice."""
-        state = context or {}
-        last_synced_unix = state.get(self.replication_key)
-        
-        if last_synced_unix is None:
-            last_synced_unix = self.get_starting_unix()
-            self.logger.info(f"First run: using default start unix {last_synced_unix}")
-        else:
-            self.logger.info(f"Incremental run: using saved unix {last_synced_unix}")
-        
-        url = self.get_url(last_synced_unix)
-        self.logger.info(f"Fetching supplier products from {url}")
-        
-        response = self.session.get(url, headers=self.authenticator.auth_headers)
-        if response.status_code != 200:
-            self.logger.error(f"Error fetching supplier products: {response.status_code}")
-            self.logger.error(response.text)
-            return
-        
-        data = self._parse_json_response(response, "fetching supplier products")
-        items = data.get("items", [])
-        self.logger.info(f"Retrieved {len(items)} supplier-product relationships")
-        
-        # Save current unix timestamp for next run
-        current_unix = self.get_current_unix()
-        self.logger.info(f"Current unix timestamp for next run: {current_unix}")
-        
-        for item in items:
-            # Flatten productPurchasePrice
-            ppp = item.get("productPurchasePrice", {}) or {}
-            record = dict(item)
-            record["productPurchasePriceId"] = ppp.get("productPurchasePriceId")
-            record["purchasePriceEx"] = ppp.get("purchasePriceEx")
-            record["unix_timestamp"] = current_unix
+        # Get records from parent class (which handles incremental sync)
+        for record in super().get_records(context):
+            if isinstance(record, dict):
+                # Flatten productPurchasePrice
+                ppp = record.get("productPurchasePrice", {}) or {}
+                record["productPurchasePriceId"] = ppp.get("productPurchasePriceId")
+                record["purchasePriceEx"] = ppp.get("purchasePriceEx")
             yield record
     
 
@@ -864,8 +838,8 @@ class PurchaseOrdersOptiplyStream(BaseOptiplyStream):
                 "deliveryDatetime": {"type": ["string", "null"], "format": "date-time"},
                 "deliveryDocumentNumber": {"type": ["string", "null"]},
                 "details": {"type": ["array", "null"]},
-                "unix_timestamp": {"type": ["integer", "null"]},
                 "lastModified": {"type": ["string", "null"], "format": "date-time"},
+                "unix_timestamp": {"type": ["integer", "null"]},
                 "preferredDefaultSupplier": {"type": ["boolean", "null"]},
                 "recommendedSalesPriceInc": {"type": ["number", "null"]},
                 "availabilityStatusId": {"type": ["integer", "null"]},
@@ -953,6 +927,7 @@ class OrdersOptiplyStream(BaseOptiplyStream):
                 "officeId": {"type": ["integer", "null"]},
                 "employeeId": {"type": ["integer", "null"]},
                 "creationDatetime": {"type": ["string", "null"], "format": "date-time"},
+                "lastModified": {"type": ["string", "null"], "format": "date-time"},
                 "unix_timestamp": {"type": ["integer", "null"]}
             },
             "additionalProperties": True
@@ -1003,6 +978,7 @@ class StockChangesStream(BaseOptiplyStream):
                 "officeId": {"type": ["integer", "null"]},
                 "productId": {"type": ["integer", "null"]},
                 "storageName": {"type": ["string", "null"]},
+                "lastModified": {"type": ["string", "null"], "format": "date-time"},
                 "unix_timestamp": {"type": ["integer", "null"]}
             },
             "additionalProperties": True
