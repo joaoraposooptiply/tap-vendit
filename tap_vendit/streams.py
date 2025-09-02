@@ -875,6 +875,9 @@ class PurchaseOrdersOptiplyStream(BaseOptiplyStream):
                     # Extract items from details object if it exists
                     elif key == "details" and isinstance(value, dict) and "items" in value:
                         record[key] = value["items"]
+                    # Extract items from orderDetails object if it exists
+                    elif key == "orderDetails" and isinstance(value, dict) and "items" in value:
+                        record[key] = value["items"]
             yield record
 
 class OrdersOptiplyStream(BaseOptiplyStream):
@@ -937,6 +940,23 @@ class OrdersOptiplyStream(BaseOptiplyStream):
 
     def get_url(self, unix_ms: int) -> str:
         return f"{self.config['api_url']}{self.path}/{unix_ms}/true"
+    
+    def get_records(self, context: dict | None) -> Iterable[dict]:
+        """Override get_records to add data cleaning and orderDetails field extraction."""
+        # Get records from parent class
+        for record in super().get_records(context):
+            if isinstance(record, dict):
+                # Clean empty strings that should be nulls
+                for key, value in record.items():
+                    if value == "":
+                        record[key] = None
+                    # Handle literal "string" values that should be null
+                    elif key == "optiplyId" and value == "string":
+                        record[key] = None
+                    # Extract items from orderDetails object if it exists
+                    elif key == "orderDetails" and isinstance(value, dict) and "items" in value:
+                        record[key] = value["items"]
+            yield record
 
 
 class StockChangesStream(BaseOptiplyStream):
