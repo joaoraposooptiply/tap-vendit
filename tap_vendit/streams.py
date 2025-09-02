@@ -851,7 +851,49 @@ class PurchaseOrdersOptiplyStream(BaseOptiplyStream):
     """Stream for purchase orders using Optiply endpoint."""
     name = "purchase_orders_optiply"
     primary_keys = ["productPurchaseOrderId"]
-    # No schema - dynamic field discovery
+    
+    @property
+    def schema(self):
+        """Return schema specific to purchase orders optiply data."""
+        return {
+            "type": "object",
+            "properties": {
+                "productPurchaseOrderId": {"type": ["integer", "null"]},
+                "productId": {"type": ["integer", "null"]},
+                "supplierId": {"type": ["integer", "null"]},
+                "supplierProductNumber": {"type": ["string", "null"]},
+                "productNumber": {"type": ["string", "null"]},
+                "productType": {"type": ["string", "null"]},
+                "productDescription": {"type": ["string", "null"]},
+                "productSubdescription": {"type": ["string", "null"]},
+                "productExtraInfo": {"type": ["string", "null"]},
+                "amount": {"type": ["number", "null"]},
+                "purchasePriceEx": {"type": ["number", "null"]},
+                "minOrderQuantity": {"type": ["number", "null"]},
+                "extraPriceInfo": {"type": ["string", "null"]},
+                "creationDatetime": {"type": ["string", "null"], "format": "date-time"},
+                "optiplyId": {"type": ["integer", "string", "null"]},
+                "productPreorderId": {"type": ["integer", "null"]},
+                "isManual": {"type": ["boolean", "null"]},
+                "officeId": {"type": ["integer", "null"]},
+                "employeeId": {"type": ["integer", "null"]},
+                "targetSupplierId": {"type": ["integer", "null"]},
+                "productPurchaseHeaderId": {"type": ["integer", "null"]},
+                "deliveryDatetime": {"type": ["string", "null"], "format": "date-time"},
+                "deliveryDocumentNumber": {"type": ["string", "null"]},
+                "details": {"type": ["array", "null"]},
+                "unix_timestamp": {"type": ["integer", "null"]},
+                "lastModified": {"type": ["string", "null"], "format": "date-time"},
+                "preferredDefaultSupplier": {"type": ["boolean", "null"]},
+                "recommendedSalesPriceInc": {"type": ["number", "null"]},
+                "availabilityStatusId": {"type": ["integer", "null"]},
+                "supplierStock2": {"type": ["string", "null"]},
+                "productPurchasePrice": {"type": ["object", "null"]},
+                "productPurchasePriceId": {"type": ["integer", "null"]},
+                "expectedArrivalDatetime": {"type": ["string", "null"], "format": "date-time"}
+            },
+            "additionalProperties": True
+        }
 
     def __init__(self, tap: "TapVendit"):
         super().__init__(tap)
