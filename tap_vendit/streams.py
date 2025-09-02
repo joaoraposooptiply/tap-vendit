@@ -391,7 +391,58 @@ class ProductsStream(BaseFindGetMultipleStream):
     primary_keys = ["productId"]
     replication_key = "lastModified"
     records_jsonpath = "$.items[*]"
-    # No schema - dynamic field discovery
+    
+    @property
+    def schema(self):
+        """Return schema specific to products data."""
+        return {
+            "type": "object",
+            "properties": {
+                "productId": {"type": ["integer", "null"]},
+                "productNumber": {"type": ["string", "null"]},
+                "productType": {"type": ["string", "null"]},
+                "productDescription": {"type": ["string", "null"]},
+                "productSubdescription": {"type": ["string", "null"]},
+                "additionalInfo": {"type": ["string", "null"]},
+                "useStock": {"type": ["boolean", "null"]},
+                "salesVisibilityId": {"type": ["integer", "null"]},
+                "availabilityStatusId": {"type": ["integer", "null"]},
+                "creationDatetime": {"type": ["string", "null"], "format": "date-time"},
+                "lastModified": {"type": ["string", "null"], "format": "date-time"},
+                "productGuid": {"type": ["string", "null"]},
+                "memoCommon": {"type": ["string", "null"]},
+                "memoEcommerce": {"type": ["string", "null"]},
+                "productSize": {"type": ["string", "null"]},
+                "productColor": {"type": ["string", "null"]},
+                "salesUnitQuantity": {"type": ["number", "null"]},
+                "hintInfo": {"type": ["string", "null"]},
+                "productSearchCode": {"type": ["string", "null"]},
+                "groupId": {"type": ["integer", "null"]},
+                "brandId": {"type": ["integer", "null"]},
+                "brancheId": {"type": ["integer", "null"]},
+                "productKindId": {"type": ["integer", "null"]},
+                "productLabelLayoutId": {"type": ["integer", "null"]},
+                "cabProfileCode": {"type": ["integer", "null"]},
+                "allowInvoiceDiscount": {"type": ["boolean", "null"]},
+                "useGroupInvoiceDiscount": {"type": ["boolean", "null"]},
+                "isBaseProduct": {"type": ["boolean", "null"]},
+                "deliveryFromWarehouse": {"type": ["integer", "null"]},
+                "purchaseFromWarehouse": {"type": ["integer", "null"]},
+                "viaCollectionWarehouse": {"type": ["integer", "null"]},
+                "bebat": {"type": ["integer", "null"]},
+                "extraCostQuantity": {"type": ["integer", "null"]},
+                "mintatonPosDealId": {"type": ["string", "null"]},
+                "assortmentCode": {"type": ["string", "null"]},
+                "modifiedBy": {"type": ["string", "null"]},
+                "originCountryCode": {"type": ["string", "null"]},
+                "originCountry": {"type": ["string", "null"]},
+                "suppliers": {"type": ["object", "null"]},
+                "salesPrices": {"type": ["object", "null"]},
+                "productVats": {"type": ["object", "null"]},
+                "availableStock": {"type": ["object", "null"]}
+            },
+            "additionalProperties": True
+        }
 
     @property
     def path(self):
