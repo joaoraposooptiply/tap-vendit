@@ -994,7 +994,44 @@ class PrePurchaseOrdersStream(BaseStream):
     primary_keys = ["productPreorderId"]
     replication_key = None  # No replication key for GetAll
     records_jsonpath = "$.items[*]"  # Use standard Singer SDK record processing
-    # No schema - dynamic field discovery
+    
+    @property
+    def schema(self):
+        """Return schema specific to pre purchase orders data."""
+        return {
+            "type": "object",
+            "properties": {
+                "productPreorderId": {"type": ["integer", "null"]},
+                "isManual": {"type": ["boolean", "null"]},
+                "officeId": {"type": ["integer", "null"]},
+                "employeeId": {"type": ["integer", "null"]},
+                "productId": {"type": ["integer", "null"]},
+                "supplierProductNumber": {"type": ["string", "null"]},
+                "productNumber": {"type": ["string", "null"]},
+                "productType": {"type": ["string", "null"]},
+                "productDescription": {"type": ["string", "null"]},
+                "productSubdescription": {"type": ["string", "null"]},
+                "productExtraInfo": {"type": ["string", "null"]},
+                "targetSupplierId": {"type": ["integer", "null"]},
+                "targetOfficeId": {"type": ["integer", "null"]},
+                "amount": {"type": ["number", "null"]},
+                "purchasePriceEx": {"type": ["number", "null"]},
+                "orderReference": {"type": ["string", "null"]},
+                "minOrderQuantity": {"type": ["number", "null"]},
+                "extraPriceInfo": {"type": ["string", "null"]},
+                "promotionProductId": {"type": ["integer", "null"]},
+                "lineId": {"type": ["string", "null"]},
+                "creationDatetime": {"format": "date-time", "type": ["string", "null"]},
+                "serialNumber": {"type": ["string", "null"]},
+                "frameNumber": {"type": ["string", "null"]},
+                "imeiNumber": {"type": ["string", "null"]},
+                "certificateNumber": {"type": ["string", "null"]},
+                "optiplyId": {"type": ["string", "null"]},
+                "brutoPurchasePriceEx": {"type": ["number", "null"]},
+                "useFormula": {"type": ["boolean", "null"]}
+            },
+            "additionalProperties": True
+        }
 
     @property
     def path(self):
@@ -1018,27 +1055,26 @@ class PrePurchaseOrdersStream(BaseStream):
         
         self.logger.info("✅ API request successful")
         
-        # Let the Singer SDK handle the response parsing with data cleaning
-        yield from self.parse_response(response)
+        # Parse the response manually since the parent parse_response might not work
+        data = self._parse_json_response(response, "fetching pre purchase orders")
+        items = data.get("items", [])
         
-        total_elapsed = time.time() - start_time
-        self.logger.info(f"🎉 PrePurchaseOrders sync completed! Total time: {total_elapsed:.2f}s")
-    
-    def parse_response(self, response: requests.Response) -> t.Iterable[dict]:
-        """Override parse_response to add data cleaning for empty strings."""
-        # Get the records from the parent parse_response
-        records = super().parse_response(response)
+        self.logger.info(f"📊 Retrieved {len(items)} pre purchase orders")
         
-        # Clean empty strings that should be nulls
-        for record in records:
+        # Clean and yield each record
+        for record in items:
             if isinstance(record, dict):
+                # Clean empty strings that should be nulls
                 for key, value in record.items():
                     if value == "":
                         record[key] = None
                     # Handle literal "string" values that should be null
                     elif key == "optiplyId" and value == "string":
                         record[key] = None
-            yield record
+                yield record
+        
+        total_elapsed = time.time() - start_time
+        self.logger.info(f"🎉 PrePurchaseOrders sync completed! Total time: {total_elapsed:.2f}s")
 
 
 class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
