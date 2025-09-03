@@ -1138,6 +1138,11 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
                 "operator": 0
             }
             
+            # Debug logging to see what's being sent
+            if page_count == 1:
+                self.logger.info(f"🔍 DEBUG: Using start_date: {start_date}")
+                self.logger.info(f"🔍 DEBUG: Find payload: {payload}")
+            
             self.logger.info(f"📄 Fetching page {page_count} (offset: {offset})...")
             response = self._request("POST", find_url, json=payload)
             data = self._parse_json_response(response, "finding history purchase order IDs")
@@ -1222,22 +1227,21 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
     
     def get_starting_time(self, context: Optional[dict]) -> datetime:
         """Override to handle our own state management."""
-        # The Singer SDK passes state in context, but we need to extract it properly
-        if context and isinstance(context, dict):
-            # Try to get the replication key value from the state
-            replication_key_value = self.get_starting_replication_key_value(context)
-            if replication_key_value:
-                if isinstance(replication_key_value, str):
-                    # Handle ISO format with 'Z' timezone suffix
-                    if replication_key_value.endswith('Z'):
-                        replication_key_value = replication_key_value[:-1] + '+00:00'
-                    try:
-                        return datetime.fromisoformat(replication_key_value)
-                    except ValueError:
-                        # Fallback to parsing without timezone info
-                        return datetime.fromisoformat(replication_key_value.replace('Z', ''))
-                elif isinstance(replication_key_value, datetime):
-                    return replication_key_value
+        # Use the Singer SDK's built-in method to get the replication key value
+        replication_key_value = self.get_starting_replication_key_value(context)
+        
+        if replication_key_value:
+            if isinstance(replication_key_value, str):
+                # Handle ISO format with 'Z' timezone suffix
+                if replication_key_value.endswith('Z'):
+                    replication_key_value = replication_key_value[:-1] + '+00:00'
+                try:
+                    return datetime.fromisoformat(replication_key_value)
+                except ValueError:
+                    # Fallback to parsing without timezone info
+                    return datetime.fromisoformat(replication_key_value.replace('Z', ''))
+            elif isinstance(replication_key_value, datetime):
+                return replication_key_value
         
         # Fallback to config start_date or default
         start_date = self.config.get("start_date")
