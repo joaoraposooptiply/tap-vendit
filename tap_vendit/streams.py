@@ -1086,10 +1086,21 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
     
     @property
     def schema(self):
-        """Return schema with custom_sync_date field for state management."""
-        base_schema = super().schema
-        base_schema["properties"]["custom_sync_date"] = {"type": ["string", "null"], "format": "date-time"}
-        return base_schema
+        """Return schema specific to history purchase orders data."""
+        return {
+            "type": "object",
+            "properties": {
+                "productPurchaseHeaderId": {"type": ["integer", "null"]},
+                "officeId": {"type": ["integer", "null"]},
+                "supplierId": {"type": ["integer", "null"]},
+                "employeeId": {"type": ["integer", "null"]},
+                "deliveryDatetime": {"type": ["string", "null"], "format": "date-time"},
+                "deliveryDocumentNumber": {"type": ["string", "null"]},
+                "details": {"type": ["array", "null"]},
+                "custom_sync_date": {"type": ["string", "null"], "format": "date-time"}
+            },
+            "additionalProperties": True
+        }
 
     @property
     def path(self):
