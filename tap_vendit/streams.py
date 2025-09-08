@@ -1173,7 +1173,10 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
         
         successful = 0
         failed = 0
-        latest_date = start_date
+        
+        # Use a consistent sync timestamp for all records in this sync
+        sync_timestamp = datetime.now()
+        self.logger.info(f"🕐 Using sync timestamp: {sync_timestamp.isoformat()}")
         
         for i, po_id in enumerate(all_ids):
             if (i + 1) % 50 == 0 or (i + 1) == len(all_ids):
@@ -1203,13 +1206,8 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
                     data["details"] = data["details"]["items"]
                 
                 # Add our custom replication key for state management
-                data["custom_sync_date"] = datetime.now().isoformat()
-                
-                # Track the latest date for next sync
-                if hasattr(self, '_latest_sync_date'):
-                    self._latest_sync_date = max(self._latest_sync_date, datetime.now())
-                else:
-                    self._latest_sync_date = datetime.now()
+                # Use the same timestamp for all records in this sync
+                data["custom_sync_date"] = sync_timestamp.isoformat()
                 
                 successful += 1
                 yield data
@@ -1224,6 +1222,7 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
         self.logger.info(f"   • Failed requests: {failed}")
         self.logger.info(f"   • Total time: {total_elapsed:.2f}s")
         self.logger.info(f"   • Average time per record: {total_elapsed/len(all_ids):.3f}s")
+        self.logger.info(f"   • State will be updated to: {sync_timestamp.isoformat()}")
     
     def get_starting_time(self, context: Optional[dict]) -> datetime:
         """Override to handle our own state management."""
@@ -1256,7 +1255,4 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
                 return datetime.fromisoformat(start_date.replace('Z', ''))
         return datetime(1970, 1, 1)
     
-    def _increment_stream_state(self, record, context):
-        """Override to handle our own state updates."""
-        if context and hasattr(self, '_latest_sync_date'):
-            context["replication_key_value"] = self._latest_sync_date.isoformat()
+    
