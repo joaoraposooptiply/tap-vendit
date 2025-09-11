@@ -824,6 +824,7 @@ class PurchaseOrdersOptiplyStream(BaseOptiplyStream):
                 "employeeId": {"type": ["integer", "null"]},
                 "onlineOrderReference": {"type": ["string", "null"]},
                 "orderRemark": {"type": ["string", "null"]},
+                "optiplyId": {"type": ["string", "null"]},
                 "details": {"type": ["array", "null"]},
                 "unix_timestamp": {"type": ["integer", "null"]},
             },
