@@ -818,7 +818,6 @@ class PurchaseOrdersOptiplyStream(BaseOptiplyStream):
                 "officeId": {"type": ["integer", "null"]},
                 "purchaseOrderNumber": {"type": ["string", "null"]},
                 "supplierId": {"type": ["integer", "null"]},
-                "supplierProductNumber": {"type": ["string", "null"]},
                 "orderDatetime": {"type": ["string", "null"], "format": "date-time"},
                 "orderReference": {"type": ["string", "null"]},
                 "preorderEmployeeId": {"type": ["integer", "null"]},
