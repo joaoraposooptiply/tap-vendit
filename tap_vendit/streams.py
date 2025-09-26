@@ -870,7 +870,7 @@ class OrdersOptiplyStream(BaseOptiplyStream):
             "type": "object",
             "properties": {
                 "customerOrderHeaderId": {"type": ["integer", "null"]},
-                "orderDetails": {"type": ["array", "null"]},
+                "orderDetails": {"type": ["object", "array", "null"]},
                 "customerId": {"type": ["integer", "null"]},
                 "planningId": {"type": ["integer", "null"]},
                 "customerOrderNumber": {"type": ["string", "null"]},
