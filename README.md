@@ -40,7 +40,7 @@ pipx install tap-vendit
   "vendit_api_key": "your_api_key",
   "username": "your_username",
   "password": "your_password",
-  "api_url": "https://api.staging.vendit.online",
+  "api_url": "https://api2.vendit.online",
   "start_date": "2024-01-01T00:00:00Z",
   "config_file": "/path/to/config.json"  // Optional: for token persistence
 }
@@ -48,7 +48,7 @@ pipx install tap-vendit
 
 The `vendit_api_key`, `username`, and `password` are your Vendit API credentials. These are used to authenticate with the Vendit API and obtain an access token.
 
-The `api_url` is the base URL for the Vendit API. The default is set to the staging environment.
+The `api_url` is the base URL for the Vendit API. The default is set to the production environment.
 
 The `start_date` is used by the tap to fetch records from that date on. This should be an [RFC3339](https://www.ietf.org/rfc/rfc3339.txt) formatted date-time, like "2024-01-01T00:00:00Z". For more details, see the [Singer best practices for dates](https://github.com/singer-io/getting-started/blob/master/BEST_PRACTICES.md#dates).
 

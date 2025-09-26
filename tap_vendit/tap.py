@@ -61,7 +61,7 @@ class TapVendit(Tap):
         th.Property(
             "api_url",
             th.StringType(),
-            default="https://api.staging.vendit.online",
+            default="https://api2.vendit.online",
             description="The url for the Vendit API service",
         ),
         th.Property(

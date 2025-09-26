@@ -44,7 +44,7 @@ class VenditStream(RESTStream):
     @property
     def url_base(self) -> str:
         """Return the API URL root, configurable via tap settings."""
-        return self.config.get("api_url", "https://api.vendit.com/v1")
+        return self.config.get("api_url", "https://api2.vendit.online")
 
     @property
     def authenticator(self) -> VenditAuthenticator:
