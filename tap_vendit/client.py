@@ -35,7 +35,23 @@ class VenditStream(RESTStream):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.session = requests.Session()
-        self.session.verify = False  # Disable SSL verification for all requests
+        # Enable SSL verification by default, but allow override via config
+        self.session.verify = self.config.get("verify_ssl", True)
+        
+        # Configure connection pooling for better performance
+        adapter = requests.adapters.HTTPAdapter(
+            pool_connections=self.config.get("connection_pool_size", 10),
+            pool_maxsize=self.config.get("connection_pool_size", 10),
+            max_retries=self.config.get("max_retries", 3)
+        )
+        self.session.mount('http://', adapter)
+        self.session.mount('https://', adapter)
+        
+        # Suppress SSL warnings if verification is disabled
+        if not self.session.verify:
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            
         self._authenticator = VenditAuthenticator(
             stream=self,
             config_file=self.config.get("config_file")

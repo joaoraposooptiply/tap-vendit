@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional, Iterable, TYPE_CHECKING
 import time
 import os
 import requests
+import backoff
 
 # from singer_sdk import typing as th  # No longer needed with dynamic schemas
 # from singer_sdk.helpers._util import read_json_file  # No longer needed
@@ -38,6 +39,8 @@ FILTER_COMPARISONS = {
 # Common pagination settings
 DEFAULT_PAGE_SIZE = 100
 DEFAULT_BATCH_SIZE = 100
+DEFAULT_CONNECTION_POOL_SIZE = 10
+DEFAULT_MAX_RETRIES = 3
 
 class BaseStream(VenditStream):
     """Base stream with DRY incremental and request logic."""
@@ -78,8 +81,15 @@ class BaseStream(VenditStream):
                 return datetime.fromisoformat(start_date.replace('Z', ''))
         return datetime(1970, 1, 1)
 
+    @backoff.on_exception(
+        backoff.expo,
+        (requests.exceptions.RequestException, requests.exceptions.HTTPError),
+        max_tries=3,
+        factor=2,
+        jitter=backoff.random_jitter
+    )
     def _request(self, method, url, **kwargs):
-        """Make authenticated request with automatic token refresh."""
+        """Make authenticated request with automatic token refresh and retry logic."""
         if not self.authenticator.is_token_valid():
             self.logger.info("Token missing or expired, fetching new token...")
             self.authenticator.update_access_token()
@@ -104,9 +114,19 @@ class BaseStream(VenditStream):
     def _parse_json_response(self, response: requests.Response, context: str = "") -> Dict[str, Any]:
         """Parse JSON response with consistent error handling."""
         try:
+            response.raise_for_status()  # Raise an exception for bad status codes
             return response.json()
+        except requests.exceptions.HTTPError as e:
+            self.logger.error(f"HTTP error {context}: {response.status_code} - {e}")
+            self.logger.error(f"Response text: {response.text}")
+            raise
+        except requests.exceptions.JSONDecodeError as e:
+            self.logger.error(f"JSON decode error {context}: {e}")
+            self.logger.error(f"Response text: {response.text}")
+            raise
         except Exception as e:
-            self.logger.error(f"Failed to parse JSON response {context}: {response.status_code}")
+            self.logger.error(f"Unexpected error parsing response {context}: {e}")
+            self.logger.error(f"Response status: {response.status_code}")
             self.logger.error(f"Response text: {response.text}")
             raise
 
@@ -607,7 +627,10 @@ class OrdersStream(BaseFindGetWithDetailsStream):
                 "purchaseOrderNumber": {"type": ["string", "null"]},
                 "officeId": {"type": ["integer", "null"]},
                 "employeeId": {"type": ["integer", "null"]},
-                "creationDatetime": {"type": ["string", "null"], "format": "date-time"}
+                "creationDatetime": {"type": ["string", "null"], "format": "date-time"},
+                "ecommerceWebsiteGuid": {"type": ["string", "null"]},
+                "isEcommerce": {"type": ["boolean", "null"]},
+                "invoiceDebitCustomerId": {"type": ["integer", "null"]}
             },
             "additionalProperties": True
         }
@@ -870,7 +893,7 @@ class OrdersOptiplyStream(BaseOptiplyStream):
             "type": "object",
             "properties": {
                 "customerOrderHeaderId": {"type": ["integer", "null"]},
-                "orderDetails": {"type": ["object", "array", "null"], "items": {"type": "object"}},
+                "orderDetails": {"type": ["object", "array", "null"]},
                 "customerId": {"type": ["integer", "null"]},
                 "planningId": {"type": ["integer", "null"]},
                 "customerOrderNumber": {"type": ["string", "null"]},
@@ -908,7 +931,10 @@ class OrdersOptiplyStream(BaseOptiplyStream):
                 "employeeId": {"type": ["integer", "null"]},
                 "creationDatetime": {"type": ["string", "null"], "format": "date-time"},
                 "lastModified": {"type": ["string", "null"], "format": "date-time"},
-                "unix_timestamp": {"type": ["integer", "null"]}
+                "unix_timestamp": {"type": ["integer", "null"]},
+                "ecommerceWebsiteGuid": {"type": ["string", "null"]},
+                "isEcommerce": {"type": ["boolean", "null"]},
+                "invoiceDebitCustomerId": {"type": ["integer", "null"]}
             },
             "additionalProperties": True
         }

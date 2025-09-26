@@ -82,6 +82,24 @@ class TapVendit(Tap):
                 "<tap_name>/<tap_version>"
             ),
         ),
+        th.Property(
+            "verify_ssl",
+            th.BooleanType(),
+            default=True,
+            description="Whether to verify SSL certificates. Set to false for self-signed certificates.",
+        ),
+        th.Property(
+            "connection_pool_size",
+            th.IntegerType(),
+            default=10,
+            description="Number of connections to pool for HTTP requests.",
+        ),
+        th.Property(
+            "max_retries",
+            th.IntegerType(),
+            default=3,
+            description="Maximum number of retries for failed requests.",
+        ),
         th.Property("state_file", th.StringType, required=False),
         th.Property("sync_endpoints", th.BooleanType, required=False),
     ).to_dict()
@@ -89,6 +107,41 @@ class TapVendit(Tap):
     def discover_streams(self) -> List[Stream]:
         """Return a list of discovered streams."""
         return [stream_class(tap=self) for stream_class in STREAM_TYPES]
+    
+    def validate_config(self) -> None:
+        """Validate the configuration."""
+        super().validate_config()
+        
+        # Validate required fields
+        required_fields = ["username", "password", "vendit_api_key"]
+        missing_fields = [field for field in required_fields if not self.config.get(field)]
+        
+        if missing_fields:
+            raise ValueError(f"Missing required configuration fields: {', '.join(missing_fields)}")
+        
+        # Validate API URL format
+        api_url = self.config.get("api_url", "https://api2.vendit.online")
+        if not api_url.startswith(("http://", "https://")):
+            raise ValueError("api_url must start with http:// or https://")
+        
+        # Validate date formats
+        start_date = self.config.get("start_date")
+        if start_date:
+            try:
+                from datetime import datetime
+                if isinstance(start_date, str):
+                    datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            except ValueError:
+                raise ValueError("start_date must be in ISO format (e.g., '2020-01-01T00:00:00Z')")
+        
+        # Validate numeric fields
+        connection_pool_size = self.config.get("connection_pool_size", 10)
+        if not isinstance(connection_pool_size, int) or connection_pool_size < 1:
+            raise ValueError("connection_pool_size must be a positive integer")
+        
+        max_retries = self.config.get("max_retries", 3)
+        if not isinstance(max_retries, int) or max_retries < 0:
+            raise ValueError("max_retries must be a non-negative integer")
 
 if __name__ == "__main__":
     TapVendit.cli()

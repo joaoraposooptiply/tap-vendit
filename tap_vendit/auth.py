@@ -97,7 +97,7 @@ class TokenStorage(FileHandler):
 class RequestHandler:
     """Handles HTTP requests with authentication."""
     
-    def __init__(self, verify_ssl: bool = False) -> None:
+    def __init__(self, verify_ssl: bool = True) -> None:
         """Initialize request handler.
         
         Args:
@@ -105,6 +105,11 @@ class RequestHandler:
         """
         self.session = requests.Session()
         self.session.verify = verify_ssl
+        
+        # Suppress SSL warnings if verification is disabled
+        if not verify_ssl:
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         
     def make_request(
         self,
@@ -169,7 +174,7 @@ class VenditAuthenticator(APIAuthenticatorBase):
         # Use the config file path from the tap, or fall back to secrets.json
         config_file_path = config_file or self._tap._config.get("config_file") or os.path.abspath("secrets.json")
         self._token_storage = TokenStorage(config_file_path)
-        self._request_handler = RequestHandler(verify_ssl=False)
+        self._request_handler = RequestHandler(verify_ssl=True)
         # Load any existing token data
         token_data = self._token_storage.read_token()
         if token_data:

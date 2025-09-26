@@ -11,6 +11,9 @@ Built with the [Meltano Tap SDK](https://sdk.meltano.com) for Singer Taps.
 - **Incremental Sync**: Support for both timestamp-based and ID-based incremental synchronization
 - **Comprehensive Testing**: Built-in testing utilities for all streams with CSV and JSON output
 - **Error Handling**: Graceful handling of API errors with retry logic and exponential backoff
+- **SSL Security**: Configurable SSL certificate verification with proper warning suppression
+- **Connection Pooling**: Optimized HTTP connections for better performance
+- **Configuration Validation**: Comprehensive validation of configuration parameters
 
 ## Available Streams
 
@@ -35,6 +38,14 @@ pipx install tap-vendit
 
 ### Create a Config file
 
+Copy the example configuration file and update it with your credentials:
+
+```bash
+cp config.json.example config.json
+```
+
+Then edit `config.json` with your actual credentials:
+
 ```json
 {
   "vendit_api_key": "your_api_key",
@@ -42,17 +53,24 @@ pipx install tap-vendit
   "password": "your_password",
   "api_url": "https://api2.vendit.online",
   "start_date": "2024-01-01T00:00:00Z",
-  "config_file": "/path/to/config.json"  // Optional: for token persistence
+  "verify_ssl": true,
+  "connection_pool_size": 10,
+  "max_retries": 3,
+  "state_file": "state.json"
 }
 ```
 
-The `vendit_api_key`, `username`, and `password` are your Vendit API credentials. These are used to authenticate with the Vendit API and obtain an access token.
+### Configuration Options
 
-The `api_url` is the base URL for the Vendit API. The default is set to the production environment.
-
-The `start_date` is used by the tap to fetch records from that date on. This should be an [RFC3339](https://www.ietf.org/rfc/rfc3339.txt) formatted date-time, like "2024-01-01T00:00:00Z". For more details, see the [Singer best practices for dates](https://github.com/singer-io/getting-started/blob/master/BEST_PRACTICES.md#dates).
-
-The optional `config_file` parameter specifies where to store and load the authentication token. If not provided, it defaults to the `config.json` file in the tap's root directory.
+- **`vendit_api_key`**: Your Vendit API key (required)
+- **`username`**: Your Vendit username (required)
+- **`password`**: Your Vendit password (required)
+- **`api_url`**: The base URL for the Vendit API (default: "https://api2.vendit.online")
+- **`start_date`**: The earliest record date to sync in RFC3339 format (e.g., "2024-01-01T00:00:00Z")
+- **`verify_ssl`**: Whether to verify SSL certificates (default: true)
+- **`connection_pool_size`**: Number of HTTP connections to pool (default: 10)
+- **`max_retries`**: Maximum number of retries for failed requests (default: 3)
+- **`state_file`**: Path to store sync state (optional)
 
 ## Authentication
 
