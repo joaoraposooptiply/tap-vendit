@@ -186,7 +186,7 @@ class BaseOptiplyStream(BaseStream):
     
     def get_starting_unix(self) -> int:
         """Get the starting unix timestamp (Jan 1st, 1970 - Unix epoch)."""
-        return 1735693261000 
+        return 1 
 
     def get_current_unix(self) -> int:
         """Get current unix timestamp in milliseconds."""
