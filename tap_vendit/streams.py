@@ -29,7 +29,7 @@ FIELD_IDS = {
     "LAST_MODIFIED_PURCHASE_ORDERS": 524,  # Purchase Orders (same as orders)
     "ORDER_DATE_TIME": 200,  # Purchase Orders orderDateTime
     "CREATION_DATE": 205,
-    "TRANSACTION_DATETIME": 205,  # Transactions transactionDatetime (using same as creation date for now)
+    "TRANSACTION_DATETIME": 802,  # Transactions transactionDatetime (using same as creation date for now)
 }
 
 FILTER_COMPARISONS = {
