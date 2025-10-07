@@ -29,12 +29,14 @@ FIELD_IDS = {
     "LAST_MODIFIED_PURCHASE_ORDERS": 524,  # Purchase Orders (same as orders)
     "ORDER_DATE_TIME": 200,  # Purchase Orders orderDateTime
     "CREATION_DATE": 205,
-    "TRANSACTION_DATETIME": 802,  # Transactions transactionDatetime (using same as creation date for now)
+    "TRANSACTION_DATETIME": 802,  # Transactions transactionDatetime
+    "TRANSACTION_FILTER_154": 154,  # Additional filter field for transactions
 }
 
 FILTER_COMPARISONS = {
     "GREATER_THAN_OR_EQUAL": 2,
     "LESS_THAN_OR_EQUAL": 3,
+    "TRANSACTION_FILTER_8": 8,  # Special filter comparison for transactions field 154
 }
 
 # Common pagination settings
@@ -1429,9 +1431,14 @@ class TransactionsStream(BaseFindGetWithDetailsStream):
             payload = {
                 "fieldFilters": [
                     {
-                        "field": FIELD_IDS["TRANSACTION_DATETIME"],  # Use transaction datetime field for transactions
-                        "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000"),
-                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"]
+                        "field": FIELD_IDS["TRANSACTION_FILTER_154"],
+                        "filterComparison": FILTER_COMPARISONS["TRANSACTION_FILTER_8"],
+                        "value": ""
+                    },
+                    {
+                        "field": FIELD_IDS["TRANSACTION_DATETIME"],
+                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"],
+                        "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
                     }
                 ],
                 "paginationOffset": offset,
