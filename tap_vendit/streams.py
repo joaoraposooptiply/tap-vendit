@@ -1265,9 +1265,9 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
         return datetime(1970, 1, 1)
 
 
-class TransactionsStream(BaseFindGetWithDetailsStream):
-    """Transactions stream using Find → GetWithDetails pattern."""
-    name = "transactions"
+class SellOrderTransactionsStream(BaseFindGetWithDetailsStream):
+    """Sell Order Transactions stream using Find → GetWithDetails pattern."""
+    name = "sell_order_transactions"
     primary_keys = ["saleHeaderId"]
     replication_key = "transactionDatetime"
     records_jsonpath = "$"
@@ -1435,6 +1435,251 @@ class TransactionsStream(BaseFindGetWithDetailsStream):
                         "filterComparison": FILTER_COMPARISONS["TRANSACTION_FILTER_8"],
                         "value": ""
                     },
+                    {
+                        "field": FIELD_IDS["TRANSACTION_DATETIME"],
+                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"],
+                        "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+                    }
+                ],
+                "paginationOffset": offset,
+                "paginationLimit": DEFAULT_PAGE_SIZE,
+                "operator": 0
+            }
+            
+            self.logger.debug(f"📄 Fetching page {page_count} (offset: {offset})...")
+            response = self._request("POST", find_url, json=payload)
+            data = self._parse_json_response(response, "finding transaction IDs")
+            
+            ids = data.get("results", [])
+            if not ids:
+                self.logger.debug(f"📄 Page {page_count}: No results")
+                break
+                
+            all_ids.extend([str(i) for i in ids if i])
+            self.logger.debug(f"📄 Page {page_count}: Found {len(ids)} IDs (total: {len(all_ids)})")
+            
+            if len(ids) < DEFAULT_PAGE_SIZE:
+                self.logger.debug(f"📄 Page {page_count}: Last page (less than {DEFAULT_PAGE_SIZE} results)")
+                break
+            offset += DEFAULT_PAGE_SIZE
+            
+        if not all_ids:
+            self.logger.warning(f"⚠️ No {self.name} IDs found")
+            return
+            
+        find_elapsed = time.time() - start_time
+        self.logger.info(f"✅ Step 1 completed: Found {len(all_ids)} {self.name} IDs ({find_elapsed:.2f}s)")
+        
+        # Step 2: Get details
+        self.logger.info(f"🔍 Step 2: Getting {self.name} details...")
+        self.logger.info(f"📊 Processing {len(all_ids)} records...")
+        
+        successful = 0
+        failed = 0
+        
+        for i, item_id in enumerate(all_ids):
+            if (i + 1) % 50 == 0 or (i + 1) == len(all_ids):
+                progress = ((i + 1) / len(all_ids)) * 100
+                self.logger.info(f"🔄 Progress: {i + 1}/{len(all_ids)} ({progress:.1f}%) - Success: {successful}, Failed: {failed}")
+            
+            url = f"{self.config['api_url']}{self.path}/{item_id}"
+            response = self._request("GET", url)
+            
+            if response.status_code != 200:
+                self.logger.error(f"❌ Failed to fetch {self.name} {item_id}: HTTP {response.status_code}")
+                failed += 1
+                continue
+                
+            data = self._parse_json_response(response, f"fetching {self.name} {item_id}")
+            if data:
+                # Clean empty strings that should be nulls
+                for key, value in data.items():
+                    if value == "":
+                        data[key] = None
+                    # Handle literal "string" values that should be null
+                    elif key == "optiplyId" and value == "string":
+                        data[key] = None
+                
+                successful += 1
+                yield data
+            else:
+                failed += 1
+        
+        total_elapsed = time.time() - start_time
+        self.logger.info(f"🎉 {self.name} sync completed!")
+        self.logger.info(f"📊 Final Summary:")
+        self.logger.info(f"   • Total IDs found: {len(all_ids)}")
+        self.logger.info(f"   • Successfully processed: {successful}")
+        self.logger.info(f"   • Failed requests: {failed}")
+        self.logger.info(f"   • Total time: {total_elapsed:.2f}s")
+        self.logger.info(f"   • Average time per record: {total_elapsed/len(all_ids):.3f}s")
+
+
+class TransactionsStream(BaseFindGetWithDetailsStream):
+    """Transactions stream using Find → GetWithDetails pattern (all transactions without filters)."""
+    name = "transactions"
+    primary_keys = ["saleHeaderId"]
+    replication_key = "transactionDatetime"
+    records_jsonpath = "$"
+    
+    @property
+    def schema(self):
+        """Return schema specific to transactions data based on actual API response."""
+        return {
+            "type": "object",
+            "properties": {
+                "saleHeaderId": {"type": ["integer", "null"]},
+                "totalPriceExVat": {"type": ["number", "null"]},
+                "totalPriceIncVat": {"type": ["number", "null"]},
+                "totalVat": {"type": ["number", "null"]},
+                "invoiceNumber": {"type": ["string", "null"]},
+                "receiptNumber": {"type": ["string", "null"]},
+                "transactionDatetime": {"type": ["string", "null"], "format": "date-time"},
+                "employeeId": {"type": ["integer", "null"]},
+                "workstationName": {"type": ["string", "null"]},
+                "workstationCode": {"type": ["string", "null"]},
+                "officeId": {"type": ["integer", "null"]},
+                "saleExVat": {"type": ["boolean", "null"]},
+                "baselineReferenceNumber": {"type": ["string", "null"]},
+                "telecomReferenceNumber": {"type": ["string", "null"]},
+                "bonusText": {"type": ["string", "null"]},
+                "returnReasonId": {"type": ["integer", "null"]},
+                "returnExtraInformation": {"type": ["string", "null"]},
+                "isEcommerce": {"type": ["boolean", "null"]},
+                "isCustomerOrderInvoice": {"type": ["boolean", "null"]},
+                "planInfoDeliveryDatetime": {"type": ["string", "null"], "format": "date-time"},
+                "planInfoEmployeeId": {"type": ["integer", "null"]},
+                "customer": {
+                    "type": ["object", "null"],
+                    "properties": {
+                        "items": {
+                            "type": ["array", "null"],
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "saleCustomerId": {"type": ["integer", "null"]},
+                                    "saleHeaderId": {"type": ["integer", "null"]},
+                                    "customerId": {"type": ["integer", "null"]},
+                                    "invoiceZipcode": {"type": ["string", "null"]},
+                                    "invoiceCity": {"type": ["string", "null"]},
+                                    "invoiceAddressId": {"type": ["integer", "null"]},
+                                    "invoiceContactId": {"type": ["integer", "null"]},
+                                    "deliveryAddressId": {"type": ["integer", "null"]},
+                                    "deliveryContactId": {"type": ["integer", "null"]},
+                                    "invoiceCountryId": {"type": ["integer", "null"]}
+                                },
+                                "additionalProperties": True
+                            }
+                        }
+                    },
+                    "additionalProperties": True
+                },
+                "saleDetails": {
+                    "type": ["object", "null"],
+                    "properties": {
+                        "items": {
+                            "type": ["array", "null"],
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "saleDetailId": {"type": ["integer", "null"]},
+                                    "saleHeaderId": {"type": ["integer", "null"]},
+                                    "productId": {"type": ["integer", "null"]},
+                                    "productQuantity": {"type": ["number", "null"]},
+                                    "productNumber": {"type": ["string", "null"]},
+                                    "productType": {"type": ["string", "null"]},
+                                    "productKindDescription": {"type": ["string", "null"]},
+                                    "productDescription": {"type": ["string", "null"]},
+                                    "productSubdescription": {"type": ["string", "null"]},
+                                    "brancheName": {"type": ["string", "null"]},
+                                    "productGroupId": {"type": ["integer", "null"]},
+                                    "brandName": {"type": ["string", "null"]},
+                                    "productColorCode": {"type": ["string", "null"]},
+                                    "productColorName": {"type": ["string", "null"]},
+                                    "productSizeName": {"type": ["string", "null"]},
+                                    "supplierNumber": {"type": ["string", "null"]},
+                                    "supplierName": {"type": ["string", "null"]},
+                                    "frameNumber": {"type": ["string", "null"]},
+                                    "lockNumber": {"type": ["string", "null"]},
+                                    "keyNumber": {"type": ["string", "null"]},
+                                    "dataTagNumber": {"type": ["string", "null"]},
+                                    "serialNumber": {"type": ["string", "null"]},
+                                    "imeiNumber": {"type": ["string", "null"]},
+                                    "licensePlateNumber": {"type": ["string", "null"]},
+                                    "productPurchasePriceEx": {"type": ["number", "null"]},
+                                    "productPurchasePriceInc": {"type": ["number", "null"]},
+                                    "productSalesPriceEx": {"type": ["number", "null"]},
+                                    "productSalesPriceInc": {"type": ["number", "null"]},
+                                    "productVatPercentage": {"type": ["number", "null"]},
+                                    "productTotalVatAmount": {"type": ["number", "null"]},
+                                    "productTotalSalesPriceEx": {"type": ["number", "null"]},
+                                    "productTotalSalesPriceInc": {"type": ["number", "null"]},
+                                    "productTotalMarginProEx": {"type": ["number", "null"]},
+                                    "productTotalMarginEx": {"type": ["number", "null"]},
+                                    "productTotalMarginProInc": {"type": ["number", "null"]},
+                                    "productTotalMarginInc": {"type": ["number", "null"]},
+                                    "productVatDescription": {"type": ["string", "null"]},
+                                    "vatId": {"type": ["integer", "null"]},
+                                    "productSizeColorId": {"type": ["integer", "null"]},
+                                    "licensePlateMeldcode": {"type": ["string", "null"]},
+                                    "motorNumber": {"type": ["string", "null"]},
+                                    "turnoverEmployeeId": {"type": ["integer", "null"]},
+                                    "brancheId": {"type": ["integer", "null"]},
+                                    "linkId": {"type": ["integer", "null"]},
+                                    "processedSalePriceIncForVat": {"type": ["number", "null"]},
+                                    "exportBit": {"type": ["integer", "null"]},
+                                    "passportNumber": {"type": ["string", "null"]},
+                                    "stockOfficeId": {"type": ["integer", "null"]},
+                                    "returnFromSaleDetailId": {"type": ["integer", "null"]},
+                                    "batteryNumber": {"type": ["string", "null"]},
+                                    "displayNumber": {"type": ["string", "null"]},
+                                    "extraProductCostsId": {"type": ["integer", "null"]},
+                                    "extraProductCostsGroupGuid": {"type": ["string", "null"]},
+                                    "orderTurnoverDatetime": {"type": ["string", "null"], "format": "date-time"},
+                                    "customerOrderNumber": {"type": ["string", "null"]},
+                                    "customerOrderCreationDatetime": {"type": ["string", "null"], "format": "date-time"},
+                                    "assortmentCode": {"type": ["string", "null"]},
+                                    "mileage": {"type": ["string", "null"]},
+                                    "resaleBonus": {"type": ["number", "null"]},
+                                    "combinationDiscountId": {"type": ["integer", "null"]},
+                                    "combinationDiscountQuantity": {"type": ["number", "null"]},
+                                    "registeredDiscountType": {"type": ["integer", "null"]},
+                                    "leaseContractNumber": {"type": ["string", "null"]},
+                                    "leaseVehicleNumber": {"type": ["string", "null"]}
+                                },
+                                "additionalProperties": True
+                            }
+                        }
+                    },
+                    "additionalProperties": True
+                }
+            },
+            "additionalProperties": True
+        }
+
+    @property
+    def path(self):
+        return "/VenditPublicApi/Transactions/GetWithDetails"
+
+    def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
+        """Override to get all transactions without field 154 filter."""
+        start_time = time.time()
+        self.logger.info(f"🚀 Starting {self.name} sync using Find → GetWithDetails pattern...")
+        
+        start_date = self.get_starting_time(context)
+        self.logger.info(f"📅 Sync start date: {start_date.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # Step 1: Find IDs
+        self.logger.info(f"🔍 Step 1: Finding {self.name} IDs...")
+        find_url = f"{self.config['api_url']}/VenditPublicApi/Transactions/Find"
+        all_ids = []
+        offset = 0
+        page_count = 0
+        
+        while True:
+            page_count += 1
+            payload = {
+                "fieldFilters": [
                     {
                         "field": FIELD_IDS["TRANSACTION_DATETIME"],
                         "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"],
