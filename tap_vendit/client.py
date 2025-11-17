@@ -54,7 +54,8 @@ class VenditStream(RESTStream):
             
         self._authenticator = VenditAuthenticator(
             stream=self,
-            config_file=self.config.get("config_file")
+            config_file=self.config.get("config_file"),
+            auth_endpoint=self.config.get("oauth_url")
         )
 
     @property

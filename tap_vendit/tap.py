@@ -69,6 +69,11 @@ class TapVendit(Tap):
             description="The url for the Vendit API service",
         ),
         th.Property(
+            "oauth_url",
+            th.StringType(),
+            description="The url for the Vendit OAuth token endpoint (optional, defaults to production if not provided)",
+        ),
+        th.Property(
             "start_date",
             th.DateTimeType(),
             description="The earliest record date to sync",
@@ -127,6 +132,11 @@ class TapVendit(Tap):
         api_url = self.config.get("api_url", "https://api2.vendit.online")
         if not api_url.startswith(("http://", "https://")):
             raise ValueError("api_url must start with http:// or https://")
+        
+        # Validate OAuth URL format if provided
+        oauth_url = self.config.get("oauth_url")
+        if oauth_url and not oauth_url.startswith(("http://", "https://")):
+            raise ValueError("oauth_url must start with http:// or https://")
         
         # Validate date formats
         start_date = self.config.get("start_date")

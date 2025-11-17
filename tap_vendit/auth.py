@@ -169,7 +169,12 @@ class VenditAuthenticator(APIAuthenticatorBase):
             auth_endpoint: Optional override for the auth endpoint URL
         """
         super().__init__(stream=stream)
-        self._auth_endpoint = auth_endpoint or "https://oauth.vendit.online/Api/GetToken"
+        # Use auth_endpoint parameter, or oauth_url from config, or default to production
+        self._auth_endpoint = (
+            auth_endpoint 
+            or stream._tap.config.get("oauth_url") 
+            or "https://oauth.vendit.online/Api/GetToken"
+        )
         self._tap = stream._tap
         # Use the config file path from the tap, or fall back to secrets.json
         config_file_path = config_file or self._tap._config.get("config_file") or os.path.abspath("secrets.json")
