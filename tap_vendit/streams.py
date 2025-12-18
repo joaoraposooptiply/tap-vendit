@@ -28,15 +28,21 @@ FIELD_IDS = {
     "LAST_MODIFIED_ORDERS": 524,  # Orders
     "LAST_MODIFIED_PURCHASE_ORDERS": 524,  # Purchase Orders (same as orders)
     "ORDER_DATE_TIME": 200,  # Purchase Orders orderDateTime
+    "DELIVERY_DATE_TIME": 401,  # HistoryPurchaseOrders deliveryDateTime
     "CREATION_DATE": 205,
     "TRANSACTION_DATETIME": 802,  # Transactions transactionDatetime
     "TRANSACTION_FILTER_154": 154,  # Additional filter field for transactions
 }
 
+# Filter comparison values per Vendit API docs
 FILTER_COMPARISONS = {
-    "GREATER_THAN_OR_EQUAL": 2,
-    "LESS_THAN_OR_EQUAL": 3,
-    "TRANSACTION_FILTER_8": 8,  # Special filter comparison for transactions field 154
+    "EQUALS": 0,
+    "NOT_EQUALS": 1,
+    "GREATER_THAN": 2,
+    "LESS_THAN": 3,
+    "GREATER_OR_EQUAL": 4,
+    "LESS_OR_EQUAL": 5,
+    "IS_NOT_NULL": 8,  # Used for transactions field 154 filter
 }
 
 # Common pagination settings
@@ -153,7 +159,7 @@ class BaseFindStream(BaseStream):
                     {
                         "field": field_id,
                         "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000"),
-                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"]
+                        "filterComparison": FILTER_COMPARISONS["GREATER_OR_EQUAL"]
                     }
                 ],
                 "paginationOffset": offset,
@@ -447,7 +453,7 @@ class ProductsStream(BaseFindGetMultipleStream):
                     {
                         "field": FIELD_IDS["LAST_MODIFIED_ORDERS"],
                         "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000"),
-                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"]
+                        "filterComparison": FILTER_COMPARISONS["GREATER_OR_EQUAL"]
                     }
                 ],
                 "paginationOffset": offset,
@@ -658,7 +664,7 @@ class OrdersStream(BaseFindGetWithDetailsStream):
                     {
                         "field": FIELD_IDS["LAST_MODIFIED_ORDERS"],
                         "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000"),
-                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"]
+                        "filterComparison": FILTER_COMPARISONS["GREATER_OR_EQUAL"]
                     }
                 ],
                 "paginationOffset": offset,
@@ -726,7 +732,7 @@ class PurchaseOrdersStream(BaseFindGetWithDetailsStream):
                     {
                         "field": FIELD_IDS["ORDER_DATE_TIME"],
                         "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000"),
-                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"]
+                        "filterComparison": FILTER_COMPARISONS["GREATER_OR_EQUAL"]
                     }
                 ],
                 "paginationOffset": offset,
@@ -1087,10 +1093,14 @@ class PrePurchaseOrdersStream(BaseStream):
 
 
 class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
-    """History Purchase Orders stream using Find → GetWithDetails pattern."""
+    """History Purchase Orders stream using Find → GetWithDetails pattern.
+    
+    Uses deliveryDatetime for incremental sync since that's when purchase orders
+    are completed and appear in history.
+    """
     name = "history_purchase_orders"
     primary_keys = ["productPurchaseHeaderId"]
-    replication_key = "custom_sync_date"  # Custom replication key for our own state management
+    replication_key = "deliveryDatetime"  # Use actual delivery date for incremental sync
     records_jsonpath = "$"
     
     @property
@@ -1105,8 +1115,7 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
                 "employeeId": {"type": ["integer", "null"]},
                 "deliveryDatetime": {"type": ["string", "null"], "format": "date-time"},
                 "deliveryDocumentNumber": {"type": ["string", "null"]},
-                "details": {"type": ["array", "null"]},
-                "custom_sync_date": {"type": ["string", "null"], "format": "date-time"}
+                "details": {"type": ["array", "null"]}
             },
             "additionalProperties": True
         }
@@ -1116,17 +1125,21 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
         return "/VenditPublicApi/HistoryPurchaseOrders/GetWithDetails"
 
     def get_records(self, context: Optional[Dict]) -> Iterable[Dict[str, Any]]:
-        """Override to use orderDatetime field (200) for history purchase orders."""
+        """Override to use deliveryDatetime field (401) for history purchase orders.
+        
+        Uses deliveryDatetime for filtering since that's when purchase orders are
+        completed and appear in history - more reliable than orderDateTime for
+        incremental sync.
+        """
         start_time = time.time()
         self.logger.info("🚀 Starting HistoryPurchaseOrders incremental sync...")
         self.logger.info(f"📡 Find endpoint: {self.config['api_url']}/VenditPublicApi/HistoryPurchaseOrders/Find")
         self.logger.info(f"📡 Details endpoint: {self.config['api_url']}{self.path}")
         
         start_date = self.get_starting_time(context)
-        self.logger.info(f"📅 Sync start date: {start_date.strftime('%Y-%m-%d %H:%M:%S')}")
-        self.logger.info(f"ℹ️ Using field filtering for incremental sync with custom state management")
+        self.logger.info(f"📅 Sync start date (deliveryDatetime >=): {start_date.strftime('%Y-%m-%d %H:%M:%S')}")
         
-        # Step 1: Find IDs
+        # Step 1: Find IDs using deliveryDatetime filter
         self.logger.info("🔍 Step 1: Finding history purchase order IDs...")
         find_url = f"{self.config['api_url']}/VenditPublicApi/HistoryPurchaseOrders/Find"
         all_ids = []
@@ -1138,9 +1151,9 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
             payload = {
                 "fieldFilters": [
                     {
-                        "field": FIELD_IDS["ORDER_DATE_TIME"],  # Field 200 (orderDatetime)
+                        "field": FIELD_IDS["DELIVERY_DATE_TIME"],  # Field 401 (deliveryDatetime)
                         "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000"),
-                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"]
+                        "filterComparison": FILTER_COMPARISONS["GREATER_OR_EQUAL"]
                     }
                 ],
                 "paginationOffset": offset,
@@ -1149,8 +1162,8 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
             
             # Debug logging to see what's being sent
             if page_count == 1:
-                self.logger.info(f"🔍 DEBUG: Using start_date: {start_date}")
-                self.logger.info(f"🔍 DEBUG: Find payload: {payload}")
+                self.logger.info(f"🔍 Filter: deliveryDatetime >= {start_date}")
+                self.logger.debug(f"🔍 DEBUG: Find payload: {payload}")
             
             self.logger.info(f"📄 Fetching page {page_count} (offset: {offset})...")
             response = self._request("POST", find_url, json=payload)
@@ -1183,10 +1196,6 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
         successful = 0
         failed = 0
         
-        # Use a consistent sync timestamp for all records in this sync
-        sync_timestamp = datetime.now()
-        self.logger.info(f"🕐 Using sync timestamp: {sync_timestamp.isoformat()}")
-        
         for i, po_id in enumerate(all_ids):
             if (i + 1) % 50 == 0 or (i + 1) == len(all_ids):
                 progress = ((i + 1) / len(all_ids)) * 100
@@ -1214,10 +1223,6 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
                 if "details" in data and isinstance(data["details"], dict) and "items" in data["details"]:
                     data["details"] = data["details"]["items"]
                 
-                # Add our custom replication key for state management
-                # Use the same timestamp for all records in this sync
-                data["custom_sync_date"] = sync_timestamp.isoformat()
-                
                 successful += 1
                 yield data
             else:
@@ -1230,39 +1235,10 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
         self.logger.info(f"   • Successfully processed: {successful}")
         self.logger.info(f"   • Failed requests: {failed}")
         self.logger.info(f"   • Total time: {total_elapsed:.2f}s")
-        self.logger.info(f"   • Average time per record: {total_elapsed/len(all_ids):.3f}s")
-        self.logger.info(f"   • State will be updated to: {sync_timestamp.isoformat()}")
+        if all_ids:
+            self.logger.info(f"   • Average time per record: {total_elapsed/len(all_ids):.3f}s")
     
-    def get_starting_time(self, context: Optional[dict]) -> datetime:
-        """Override to handle our own state management."""
-        # Use the Singer SDK's built-in method to get the replication key value
-        replication_key_value = self.get_starting_replication_key_value(context)
-        
-        if replication_key_value:
-            if isinstance(replication_key_value, str):
-                # Handle ISO format with 'Z' timezone suffix
-                if replication_key_value.endswith('Z'):
-                    replication_key_value = replication_key_value[:-1] + '+00:00'
-                try:
-                    return datetime.fromisoformat(replication_key_value)
-                except ValueError:
-                    # Fallback to parsing without timezone info
-                    return datetime.fromisoformat(replication_key_value.replace('Z', ''))
-            elif isinstance(replication_key_value, datetime):
-                return replication_key_value
-        
-        # Fallback to config start_date or default
-        start_date = self.config.get("start_date")
-        if start_date:
-            # Handle ISO format with 'Z' timezone suffix
-            if start_date.endswith('Z'):
-                start_date = start_date[:-1] + '+00:00'
-            try:
-                return datetime.fromisoformat(start_date)
-            except ValueError:
-                # Fallback to parsing without timezone info
-                return datetime.fromisoformat(start_date.replace('Z', ''))
-        return datetime(1970, 1, 1)
+    # Uses base class get_starting_time which handles deliveryDatetime replication key
 
 
 class SellOrderTransactionsStream(BaseFindGetWithDetailsStream):
@@ -1432,12 +1408,12 @@ class SellOrderTransactionsStream(BaseFindGetWithDetailsStream):
                 "fieldFilters": [
                     {
                         "field": FIELD_IDS["TRANSACTION_FILTER_154"],
-                        "filterComparison": FILTER_COMPARISONS["TRANSACTION_FILTER_8"],
+                        "filterComparison": FILTER_COMPARISONS["IS_NOT_NULL"],
                         "value": ""
                     },
                     {
                         "field": FIELD_IDS["TRANSACTION_DATETIME"],
-                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"],
+                        "filterComparison": FILTER_COMPARISONS["GREATER_OR_EQUAL"],
                         "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
                     }
                 ],
@@ -1682,7 +1658,7 @@ class TransactionsStream(BaseFindGetWithDetailsStream):
                 "fieldFilters": [
                     {
                         "field": FIELD_IDS["TRANSACTION_DATETIME"],
-                        "filterComparison": FILTER_COMPARISONS["GREATER_THAN_OR_EQUAL"],
+                        "filterComparison": FILTER_COMPARISONS["GREATER_OR_EQUAL"],
                         "value": start_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
                     }
                 ],
