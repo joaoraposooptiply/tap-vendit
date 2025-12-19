@@ -163,6 +163,7 @@ class BaseFindStream(BaseStream):
                     }
                 ],
                 "paginationOffset": offset,
+                "paginationLimit": page_size,
                 "operator": 0
             }
             
@@ -457,6 +458,7 @@ class ProductsStream(BaseFindGetMultipleStream):
                     }
                 ],
                 "paginationOffset": offset,
+                "paginationLimit": DEFAULT_PAGE_SIZE,
                 "operator": 0
             }
             
@@ -736,6 +738,7 @@ class PurchaseOrdersStream(BaseFindGetWithDetailsStream):
                     }
                 ],
                 "paginationOffset": offset,
+                "paginationLimit": DEFAULT_PAGE_SIZE,
                 "operator": 0
             }
             
@@ -1157,6 +1160,7 @@ class HistoryPurchaseOrdersStream(BaseFindGetWithDetailsStream):
                     }
                 ],
                 "paginationOffset": offset,
+                "paginationLimit": DEFAULT_PAGE_SIZE,
                 "operator": 0
             }
             
